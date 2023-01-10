@@ -27,4 +27,4 @@ LeagueSchema.virtual("url").get(function () {
 });
 
 // Export model
-module.exports = mongoose.model("League", League);
+module.exports = mongoose.model("League", LeagueSchema);
