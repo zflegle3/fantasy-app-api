@@ -8,7 +8,7 @@ const PlayerSchema = new Schema({
 });
 
 // Virtual for player's full name
-UserSchema.virtual("fullName").get(function () {
+PlayerSchema.virtual("fullName").get(function () {
   // To avoid errors in cases where an author does not have either a family name or first name
   // We want to make sure we handle the exception by returning an empty string for that case
   let fullname = "";
