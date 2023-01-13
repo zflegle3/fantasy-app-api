@@ -7,6 +7,7 @@ const league_controller = require("../controllers/leagueController");
 const user_controller = require("../controllers/userController");
 const team_controller = require("../controllers/teamController");
 const player_controller = require("../controllers/playerController");
+const { protect } = require("../middleware/authMiddleware")
 
 
 
@@ -25,7 +26,7 @@ router.post("/user/create", user_controller.user_register);
 router.post("/user/login", user_controller.user_login);
 
 // GET request for reading user data
-router.get("/user/:id", user_controller.user_read_get);
+router.get("/user/read", protect, user_controller.user_read_get);
 
 //POST request to update user data
 router.post("/user/:id/update", user_controller.user_update_post);
