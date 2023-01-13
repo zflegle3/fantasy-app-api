@@ -3,12 +3,14 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
-    userName: { type: String, required: true, maxLength: 100 },
-    password: { type: String, required: true, maxLength: 100 },
-    email: { type: String, required: true, maxLength: 100 },
-    first_name: { type: String, required: true, maxLength: 100 },
-    family_name: { type: String, required: true, maxLength: 100 },
-    leagues: [{ type: Schema.Types.ObjectId, ref: "League" }],
+    username: { type: String, required: [true, "please add a username"], maxLength: 100 },
+    password: { type: String, required: [true, "please add a password"], maxLength: 100 },
+    email: { type: String, required: [true, "please add an email"], unique: true, maxLength: 100 },
+    first_name: { type: String, required: [true, "please add a first name"], maxLength: 100 },
+    family_name: { type: String, required: [true, "please add a last name"], maxLength: 100 },
+    leagues: [],
+}, {
+  timestamps: true,
 });
 
 // Virtual for author's full name
@@ -26,10 +28,10 @@ UserSchema.virtual("fullName").get(function () {
 });
 
 // Virtual for user's URL
-UserSchema.virtual("url").get(function () {
-  // We don't use an arrow function as we'll need the this object
-  return `/user/${this._id}`;
-});
+// UserSchema.virtual("url").get(function () {
+  // We don't use an arrow function as we'll need the this object 
+//   return `/user/${this._id}`;
+// });
 
 // Export model
 module.exports = mongoose.model("User", UserSchema);

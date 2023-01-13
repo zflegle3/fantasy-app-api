@@ -1,19 +1,27 @@
 const Message = require("../models/message");
 
 // Display list of all Messages
-exports.message_read_list = (req, res) => {
-  res.send("NOT IMPLEMENTED: Messages list");
+exports.message_read_list = async (req, res) => {
+  //read list of latest messages
+  const messages = await Message.find()
+  // res.send("NOT IMPLEMENTED: Messages list");
+  res.status(200).json(messages);
 };
 
 // Handle Message create on POST.
-exports.message_create_post = (req, res) => {
-    res.send("NOT IMPLEMENTED: Messages create POST");
+exports.message_create_post = async (req, res) => {
+  //create new message
+  if (!req.body.text) {
+    res.status(400)
+    throw new Error("Please add text to the message")
+  }
+
+  const messageNew = await Message.create({
+    content: req.body.text
+  })
+  // res.send("NOT IMPLEMENTED: Messages create POST");
+  res.status(200).json(messageNew);
 };
-
-
-
-
-
 
 
 

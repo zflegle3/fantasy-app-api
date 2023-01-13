@@ -4,8 +4,9 @@ const Schema = mongoose.Schema;
 
 const TeamSchema = new Schema({
   name: { type: String, required: true },
-  manager: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  roster: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+  manager: { type: String, required: true },
+  //change manger to user schema 
+  roster: [],
 });
 
 // Virtual for book's URL

@@ -9,11 +9,31 @@ const team_controller = require("../controllers/teamController");
 const player_controller = require("../controllers/playerController");
 
 
-/* Homepage Routes */
 
+/* Homepage Routes */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  // res.render('index', { title: 'Express' });
 });
+
+
+
+/* USER ROUTES */
+//POST request for creating a new user
+router.post("/user/create", user_controller.user_register);
+
+//POST request for user login
+router.post("/user/login", user_controller.user_login);
+
+// GET request for reading user data
+router.get("/user/:id", user_controller.user_read_get);
+
+//POST request to update user data
+router.post("/user/:id/update", user_controller.user_update_post);
+
+// POST request to delete user data
+router.post("/user/:id/delete", user_controller.user_delete_post);
+
+
 
 
 /* MESSAGE ROUTES */
@@ -38,6 +58,7 @@ router.post("/league/:id/update", league_controller.league_update_post);
 router.post("/league/:id/delete", league_controller.league_delete_post);
 
 
+
 /* TEAM ROUTES */
 // GET request for reading League data
 router.get("/team/:id", team_controller.team_read_get);
@@ -52,23 +73,14 @@ router.post("/team/:id/update", team_controller.team_update_post);
 router.post("/team/:id/delete", team_controller.team_delete_post);
 
 
+
 /* PLAYER ROUTES */
 // GET request for reading Messages.
 router.get("/player/:id", player_controller.player_read_get);
 
 
-/* USER ROUTES */
-// GET request for reading League data
-router.get("/user/:id", user_controller.user_read_get);
 
-//POST request for creating a new League collection.
-router.post("/user/create", user_controller.user_create_post);
 
-//POST request to update League data.
-router.post("/user/:id/update", user_controller.user_update_post);
-
-// POST request to delete League data
-router.post("/user/:id/delete", user_controller.user_delete_post);
 
 
 module.exports = router;
