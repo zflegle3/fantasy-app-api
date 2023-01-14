@@ -6,8 +6,8 @@ const UserSchema = new Schema({
     username: { type: String, required: [true, "please add a username"], maxLength: 100 },
     password: { type: String, required: [true, "please add a password"], maxLength: 100 },
     email: { type: String, required: [true, "please add an email"], unique: true, maxLength: 100 },
-    first_name: { type: String, required: [true, "please add a first name"], maxLength: 100 },
-    family_name: { type: String, required: [true, "please add a last name"], maxLength: 100 },
+    first_name: { type: String, maxLength: 100 },
+    family_name: { type: String, maxLength: 100 },
     leagues: [],
 }, {
   timestamps: true,

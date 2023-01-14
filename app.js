@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var cors = require('cors');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -15,6 +16,7 @@ var indexRouter = require('./routes/index');
 
 var app = express();
 
+
 // Set up mongoose connection
 const mongoose = require("mongoose");
 const mongoDB = process.env.SECRET_DB_KEY;
@@ -25,7 +27,7 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 // view engine setup
 // app.set('views', path.join(__dirname, 'views'));
 // app.set('view engine', 'jade');
-
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
