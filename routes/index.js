@@ -25,8 +25,11 @@ router.post("/user/create", user_controller.user_register);
 //POST request for user login
 router.post("/user/login", user_controller.user_login);
 
-// GET request for reading user data
-router.post("/user/read",  user_controller.user_read_get);
+//POST request for reading user data
+router.post("/user/read/email",  user_controller.user_read_email);
+
+//POST request for reading user data
+router.post("/user/read/username",  user_controller.user_read_username);
 
 // // GET request for reading user data
 // router.get("/user/read", protect, user_controller.user_read_get); //format of how to protect routes
@@ -36,9 +39,6 @@ router.post("/user/:id/update", user_controller.user_update_post);
 
 // POST request to delete user data
 router.post("/user/:id/delete", user_controller.user_delete_post);
-
-
-
 
 /* MESSAGE ROUTES */
 // GET request for reading Messages.

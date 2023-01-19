@@ -85,14 +85,13 @@ exports.user_login = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc Read existing user data for signin
+// @desc Verify exsiting email for signup/login
 // @route POST /user/read
 // @access Public
-exports.user_read_get = asyncHandler(async (req, res) => {
+exports.user_read_email = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {email} = req.body;
     //Check for user by email
-    console.log(email);
     const user = await User.findOne({email});
     if (user) {
         res.json({
@@ -108,6 +107,30 @@ exports.user_read_get = asyncHandler(async (req, res) => {
         })
     }
 
+    res.status(200).json(req.user)
+});
+
+// @desc Verify exsiting username for signup
+// @route POST /user/read/username
+// @access Public
+exports.user_read_username = asyncHandler(async (req, res) => {
+    //read user data from db and send public data
+    const {username} = req.body;
+    //Check for user by email
+    const user = await User.findOne({username});
+    if (user) {
+        res.json({
+            _id: user.id,
+            username: user.username,
+            email: user.email,
+        })
+    } else {
+        res.json({
+            _id: "not valid user",
+            username: "not valid user",
+            email: "not valid user",
+        })
+    }
     res.status(200).json(req.user)
 });
 
