@@ -4,11 +4,12 @@ var cors = require('cors');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const {errorHandler} = require("./middleware/errorMiddleware");
+const { errorHandler } = require("./middleware/errorMiddleware");
+// const bodyParser = require('body-parser');
 
 //import & configure dotenv
-require('dotenv').config()
-console.log(process.env)
+require('dotenv').config();
+// console.log(process.env)
 
 var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
@@ -24,16 +25,17 @@ mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
-// view engine setup
+// view engine setup 
 // app.set('views', path.join(__dirname, 'views'));
 // app.set('view engine', 'jade');
-app.use(cors())
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
+// app.use(bodyParser.json());
+app.use(errorHandler);
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(errorHandler);
 
 app.use('/', indexRouter);
 // app.use('/users', usersRouter);

@@ -80,29 +80,35 @@ exports.user_login = asyncHandler(async (req, res) => {
 
         })
     } else {
-        res.status(400)
+        res.status(469).json({error: "wrong email pal"}); //change back to 400
         throw new Error("Invalid credentials")
     }
 });
 
-// @desc Read existing user data
+// @desc Read existing user data for signin
 // @route POST /user/read
-// @access Private
+// @access Public
 exports.user_read_get = asyncHandler(async (req, res) => {
-    //read user data from db and send
-    const {_id, username, email, first_name, family_name, leagues} = await User.findById(req.user.id);
-    res.status(200).json({
-        _id: _id,
-        username: username,
-        email: email,
-        first_name: first_name,
-        family_name: family_name,
-        leagues: leagues,
-    })
+    //read user data from db and send public data
+    const {email} = req.body;
+    //Check for user by email
+    console.log(email);
+    const user = await User.findOne({email});
+    if (user) {
+        res.json({
+            _id: user.id,
+            username: user.username,
+            email: user.email,
+        })
+    } else {
+        res.json({
+            _id: "not valid user",
+            username: "not valid user",
+            email: "not valid user",
+        })
+    }
 
- 
-
-    res.send("NOT IMPLEMENTED: User read data, GET");
+    res.status(200).json(req.user)
 });
 
 

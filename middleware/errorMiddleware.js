@@ -1,14 +1,20 @@
 const errorHandler = (err, req, res, next) => {
-    const statusCode = res.statusCode ? res.statusCode : 500
+    const statusCode = res.statusCode ? res.statusCode : 500;
 
-    res.status(statusCode)
+    console.log(err.message);
 
-    res.json({
-        message: err.message,
-        stack: process.env.Node_ENV === "production" ? null : err.stack,
-    })
+    // res.status(statusCode).json();
+
+    // return res.status(statusCode).send({ status: statusCode, message: err.message });
+
+    res.status(statusCode);
+    res.statusText(err.message);
+
 };
 
-module.exports = {
-    errorHandler,
-};
+
+// const jsonErrorHandler = (err, req, res, next) => {
+//     res.status(500).send({ error: err });
+//   }
+
+module.exports = { errorHandler }

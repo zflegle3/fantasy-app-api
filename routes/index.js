@@ -21,12 +21,15 @@ router.get('/', function(req, res, next) {
 /* USER ROUTES */
 //POST request for creating a new user
 router.post("/user/create", user_controller.user_register);
-
+ 
 //POST request for user login
 router.post("/user/login", user_controller.user_login);
 
 // GET request for reading user data
-router.get("/user/read", protect, user_controller.user_read_get);
+router.post("/user/read",  user_controller.user_read_get);
+
+// // GET request for reading user data
+// router.get("/user/read", protect, user_controller.user_read_get); //format of how to protect routes
 
 //POST request to update user data
 router.post("/user/:id/update", user_controller.user_update_post);
