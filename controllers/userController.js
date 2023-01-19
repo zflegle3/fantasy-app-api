@@ -64,23 +64,33 @@ exports.user_register = asyncHandler(async (req, res) => {
 // @access Private
 exports.user_login = asyncHandler(async (req, res) => {
     //read user data from db and send
-    const {email, password} = req.body;
-    //Check for user by email
-    const user = await User.findOne({email});
+    const {emailOrUsername, password} = req.body;
+    //Check for user by email and username
+    const userEmail = await User.findOne({email: emailOrUsername});
+    const userUsername = await User.findOne({username: emailOrUsername});
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
         res.json({
-            _id: user.id,
-            username: user.username,
-            email: user.email,
-            first_name: user.first_name,
-            family_name: user.family_name,
-            leagues: user.leagues,
-            token: generateToken(user._id),
-
+            _id: userEmail.id,
+            username: userEmail.username,
+            email: userEmail.email,
+            first_name: userEmail.first_name,
+            family_name: userEmail.family_name,
+            leagues: userEmail.leagues,
+            token: generateToken(userEmail._id),
+        })
+    } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
+        res.json({
+            _id: userUsername.id,
+            username: userUsername.username,
+            email: userUsername.email,
+            first_name: userUsername.first_name,
+            family_name: userUsername.family_name,
+            leagues: userUsername.leagues,
+            token: generateToken(userUsername._id),
         })
     } else {
-        res.status(469).json({error: "wrong email pal"}); //change back to 400
+        res.status(400).json({error: "wrong email pal"}); //change back to 400
         throw new Error("Invalid credentials")
     }
 });
