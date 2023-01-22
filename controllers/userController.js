@@ -2,9 +2,14 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
+var nodemailer = require('nodemailer');
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"})
+}
+
+const generateResetToken = (user, userSecret) => {
+    return jwt.sign({user}, userSecret, {expiresIn: "30m"})
 }
 
 // @desc Register new user
@@ -161,6 +166,155 @@ exports.user_delete_post = asyncHandler(async (req, res) => {
     //delete existing user data
     res.send("NOT IMPLEMENTED: User delete POST");
 });
+
+
+// @desc Validate email and send password reset link
+// @route POST /user/forgetpass
+// @access Public
+exports.user_forget_post = asyncHandler(async (req, res) => {
+    //send reset link to user email
+    const {email} = req.body;
+    console.log(email);
+    const user = await User.findOne({email});
+    console.log(user);
+    if (user) {
+        //create token for link
+        const userSecret = process.env.JWT_SECRET + user.password;
+        const payload = {
+            id: user._id,
+            email: user.email
+        }
+        //create one time link valid for XX min
+        let resetToken = generateResetToken(payload,userSecret);
+        const link = `http://localhost:3000/reset/${user.email}/${user._id}/${resetToken}`
+        //send email to user
+        console.log(process.env.RESET_EMAIL, process.env.RESET_EMAIL_PASS);
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: process.env.RESET_EMAIL,
+              pass: process.env.RESET_EMAIL_PASS
+            }
+        });
+
+        var mailOptions = {
+            from: process.env.RESET_EMAIL,
+            to: email,
+            subject: 'Reset Password Link - Fantasy Golf App',
+            text: `Please use the following link to reset your password: ${link}`
+        };
+
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('Email sent: ' + info.response);
+            }
+          });
+
+          res.json({ 
+            sendStatus: true,
+        })
+
+    } else {
+        res.json({ 
+            sendStatus: false,
+        })
+        res.status(400).json("No user registered with provided email")
+    }
+});
+
+// // @desc Render reset link page
+// // @route GET /user/resetpass
+// // @access Public
+// exports.user_reset_get = asyncHandler(async (req, res) => {
+//     //send reset link to user email
+//     const {id, token} = req.params;
+//     //validate user
+//     const user = await User.findOne({_id: id});
+//     if (!user) {
+//         res.status(401).json("Invalid id");
+//     }
+//     //validate jwt token
+//     const secret = process.env.JWT_SECRET + user.password
+//     try {
+//         const payload = jwt.verify(token, secret);
+//         res.render("reset", {email: user.email})
+//     } catch (err) {
+//         res.status(400).json(err);
+//     }
+// });
+
+// @desc Confirm password for reset
+// @route POST /user/read/password
+// @access Public
+exports.user_read_password = asyncHandler(async (req, res) => {
+    //read user data from db and send public data
+    const {id, password} = req.body;
+    //Check for user by email
+    const user = await User.findOne({_id: id});
+
+    if (!user) {
+        res.status(401).json("Invalid id");
+    }
+
+    if ((await bcrypt.compare(password, user.password))) {
+        //returns false for matching and true for not matching 
+        res.json({ 
+            passMatch: false,
+        })
+    } else {
+        res.json({ 
+            passMatch: true,
+        })
+    }
+    res.status(200).json(req.user)
+});
+
+// @desc validate and update new password
+// @route POST /user/resetpass
+// @access Public
+exports.user_reset_post = asyncHandler(async (req, res) => {
+    //get params from body
+    const {id, token, password} = req.body;
+    //find user by id
+    const user = await User.findOne({_id: id});
+    if (!user) {
+        res.status(401).json("Invalid user");
+    }
+    //validate jwt token
+    const secret = process.env.JWT_SECRET + user.password;
+    try {
+        const payload = jwt.verify(token, secret);
+        //encrypt password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassNew = await bcrypt.hash(password, salt);
+        //update user password
+        const updatedUser = await User.findByIdAndUpdate(id, {password: hashedPassNew});
+        res.json({ 
+            updateStatus: true,
+        })
+    } catch (err) {
+        res.json({ 
+            updateStatus: false,
+            error: err
+        })
+        res.status(400)
+    }
+
+
+
+
+
+    res.send(user);
+});
+
+
+
+
+
+
+
 
 
   

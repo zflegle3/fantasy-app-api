@@ -40,6 +40,17 @@ router.post("/user/:id/update", user_controller.user_update_post);
 // POST request to delete user data
 router.post("/user/:id/delete", user_controller.user_delete_post);
 
+// POST request to send password reset link
+router.post("/user/forgetpass", user_controller.user_forget_post);
+
+//POST request for reading/confirming user password for reset
+router.post("/user/read/password",  user_controller.user_read_password);
+
+// POST request to reset password in db 
+router.post("/user/resetpass/", user_controller.user_reset_post);
+
+
+
 /* MESSAGE ROUTES */
 // GET request for reading Messages.
 router.get("/messages", message_controller.message_read_list);
