@@ -224,27 +224,6 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
     }
 });
 
-// // @desc Render reset link page
-// // @route GET /user/resetpass
-// // @access Public
-// exports.user_reset_get = asyncHandler(async (req, res) => {
-//     //send reset link to user email
-//     const {id, token} = req.params;
-//     //validate user
-//     const user = await User.findOne({_id: id});
-//     if (!user) {
-//         res.status(401).json("Invalid id");
-//     }
-//     //validate jwt token
-//     const secret = process.env.JWT_SECRET + user.password
-//     try {
-//         const payload = jwt.verify(token, secret);
-//         res.render("reset", {email: user.email})
-//     } catch (err) {
-//         res.status(400).json(err);
-//     }
-// });
-
 // @desc Confirm password for reset
 // @route POST /user/read/password
 // @access Public
