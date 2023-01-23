@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 // const SettingsSchema = new Schema({
 //   schedule: { type : Array , "default" : [] },
 //   teamCount: { type : Number},
-//   missCutScore: { type : Number},
+//   missCutScore: { type : Number}, or string of "avg"
 //   rosterCut: { type : Number},
 //   rosterSize: { type : Number},
 // });
@@ -20,6 +20,7 @@ const LeagueSchema = new Schema({
   activity: { type : Array , "default" : [] },
   freeAgents: { type : Array , "default" : [] },
   year:{ type : Number , "default" : 2023 },
+  draft: {type: Map, required: true}, 
 },{
   timestamps: true,
 });
