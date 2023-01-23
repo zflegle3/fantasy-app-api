@@ -273,6 +273,7 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
         res.json({ 
             updateStatus: true,
         })
+        res.status(200)
     } catch (err) {
         res.json({ 
             updateStatus: false,

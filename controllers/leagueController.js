@@ -58,9 +58,21 @@ exports.league_create_post = asyncHandler(async(req, res) => {
     const currentLeagues = user.leagues;
     currentLeagues.push({
         id:league._id,
-        name: league.name});
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, {leagues: currentLeagues});
-    res.send(updatedUser);
+        name: league.name}
+    );
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, {leagues: currentLeagues});
+        res.json({ 
+            createStatus: true,
+        })
+        res.status(200);
+    } catch (err) {
+        res.json({ 
+            createStatus: false,
+        })
+        res.status(400);
+    }
 });
 
 // Handle league data update on POST.
