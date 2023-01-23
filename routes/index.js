@@ -59,12 +59,13 @@ router.get("/messages", message_controller.message_read_list);
 router.post("/message/create", message_controller.message_create_post);
 
 
+
 /* LEAGUE ROUTES */
 // GET request for reading League data
-router.get("/league/:id", league_controller.league_read_get);
+router.get("/league/:id",protect, league_controller.league_read_get);
 
 //POST request for creating a new League collection.
-router.post("/league/create", league_controller.league_create_post);
+router.post("/league/create",protect, league_controller.league_create_post);
 
 //POST request to update League data.
 router.post("/league/:id/update", league_controller.league_update_post);
