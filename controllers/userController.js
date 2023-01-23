@@ -174,9 +174,7 @@ exports.user_delete_post = asyncHandler(async (req, res) => {
 exports.user_forget_post = asyncHandler(async (req, res) => {
     //send reset link to user email
     const {email} = req.body;
-    console.log(email);
     const user = await User.findOne({email});
-    console.log(user);
     if (user) {
         //create token for link
         const userSecret = process.env.JWT_SECRET + user.password;
@@ -188,7 +186,6 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
         let resetToken = generateResetToken(payload,userSecret);
         const link = `http://localhost:3000/reset/${user.email}/${user._id}/${resetToken}`
         //send email to user
-        console.log(process.env.RESET_EMAIL, process.env.RESET_EMAIL_PASS);
         var transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {

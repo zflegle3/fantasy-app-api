@@ -7,20 +7,6 @@ const User = require("../models/user");
 const { populatePlayers, populateTeams } = require("../middleware/leagueMiddleware");
 
 
-
-
-// @desc Return league Data by ID
-// @route POST /league:id
-// @access Private
-exports.league_read_get = asyncHandler(async(req, res) => {
-    //read league data from db and send 
-    const {leagueId} = req.body;
-    const league = await League.find({_id: leagueId})
-
-    if (req.user.leagues)
-    res.send("NOT IMPLEMENTED: League read data, GET");
-});
-
 // @desc Create a new league
 // @route POST /league/create
 // @access Private
@@ -39,40 +25,54 @@ exports.league_create_post = asyncHandler(async(req, res) => {
     //     rosterSize: settings.rosterSize
     // }
     //create new League Modal object with body data
-
-    const league = await League.create({
-        name: name,
-        // admin: { type: String, required: true }, 
-        admin: req.user._id,
-        settings: settings,
-        managers: [req.user._id], //array of user models
-        teams: teamsAll, //array of team models
-        activity: activity,
-        freeAgents: players,
-        year: year,
-        draft: draft
-    })
-    console.log(league._id);
-    //add league id data to user
-    const user = await User.findById(req.user._id);
-    const currentLeagues = user.leagues;
-    currentLeagues.push({
-        id:league._id,
-        name: league.name}
-    );
-
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.user._id, {leagues: currentLeagues});
-        res.json({ 
-            createStatus: true,
+        const league = await League.create({
+            name: name,
+            // admin: { type: String, required: true }, 
+            admin: req.user._id,
+            settings: settings,
+            managers: [req.user._id], //array of user models
+            teams: teamsAll, //array of team models
+            activity: activity,
+            freeAgents: players,
+            year: year,
+            draft: draft
         })
+        res.json(league)
         res.status(200);
     } catch (err) {
-        res.json({ 
-            createStatus: false,
-        })
+        res.json({error: err})
         res.status(400);
     }
+});
+
+// @desc Return leagues by user 
+// @route POST /league:id
+// @access Private
+exports.league_read_getAll = asyncHandler(async(req, res) => {
+    // find leagues where user is a manager
+    const leaguesAll = await League.find({managers: req.user._id})
+    let leaguesResponse = [];
+    for (let i=0; i< leaguesAll.length; i++) {
+        leaguesResponse.push({
+            id: leaguesAll[i]._id,
+            name: leaguesAll[i].name
+        })
+    }
+    res.send(leaguesResponse);
+});
+
+
+// @desc Return league Data by ID
+// @route POST /league:id
+// @access Private
+exports.league_read_get = asyncHandler(async(req, res) => {
+    //read league data from db and send 
+    const {leagueId} = req.body;
+    const league = await League.find({_id: leagueId})
+
+    if (req.user.leagues)
+    res.send("NOT IMPLEMENTED: League read data, GET");
 });
 
 // Handle league data update on POST.
