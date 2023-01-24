@@ -17,7 +17,6 @@ router.get('/', function(req, res, next) {
 });
 
 
-
 /* USER ROUTES */
 //POST request for creating a new user
 router.post("/user/create", user_controller.user_register);
@@ -68,8 +67,8 @@ router.post("/league/create",protect, league_controller.league_create_post);
 //GET request for reading all leagues by user
 router.get("/league/getAll",protect, league_controller.league_read_getAll);
 
-// GET request for reading League data
-router.get("/league/getOne/:id",protect, league_controller.league_read_get);
+// POST request for reading League data
+router.post("/league/getOne",protect, league_controller.league_read_getOne);
 
 //POST request to update League data.
 router.post("/league/:id/update", league_controller.league_update_post);

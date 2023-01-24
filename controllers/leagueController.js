@@ -47,7 +47,7 @@ exports.league_create_post = asyncHandler(async(req, res) => {
 });
 
 // @desc Return leagues by user 
-// @route POST /league:id
+// @route GET league/getAll
 // @access Private
 exports.league_read_getAll = asyncHandler(async(req, res) => {
     // find leagues where user is a manager
@@ -60,19 +60,27 @@ exports.league_read_getAll = asyncHandler(async(req, res) => {
         })
     }
     res.send(leaguesResponse);
+    res.status(200);
 });
 
 
 // @desc Return league Data by ID
-// @route POST /league:id
+// @route POST league/getOne
 // @access Private
-exports.league_read_get = asyncHandler(async(req, res) => {
+exports.league_read_getOne = asyncHandler(async(req, res) => {
     //read league data from db and send 
-    const {leagueId} = req.body;
-    const league = await League.find({_id: leagueId})
+    const {_id} = req.body;
+    const league = await League.findOne({_id: _id})
+    // let managerlist = league.managers;
+    if (league.managers.includes(req.user._id)) {
+        res.send(league);
+        res.status(200);
+    } else {
+        res.json({error: "Invalid user credentials, user is not a member of the selected league"});
+        res.status(400);
+    }
 
-    if (req.user.leagues)
-    res.send("NOT IMPLEMENTED: League read data, GET");
+    // res.send(league);
 });
 
 // Handle league data update on POST.
