@@ -106,8 +106,10 @@ exports.user_login = asyncHandler(async (req, res) => {
 exports.user_read_email = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {email} = req.body;
+    console.log("email", email)
     //Check for user by email
-    const user = await User.findOne({email});
+    const user = await User.findOne({email: email})
+    console.log("email user", user)
     if (user) {
         res.json({
             _id: user.id,
@@ -131,8 +133,10 @@ exports.user_read_email = asyncHandler(async (req, res) => {
 exports.user_read_username = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {username} = req.body;
+    console.log(username)
     //Check for user by email
-    const user = await User.findOne({username});
+    const user = await User.findOne({username: username});
+    console.log(user);
     if (user) {
         res.json({
             _id: user.id,
@@ -184,7 +188,7 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
         }
         //create one time link valid for XX min
         let resetToken = generateResetToken(payload,userSecret);
-        const link = `http://localhost:3000/reset/${user.email}/${user._id}/${resetToken}`
+        const link = `http://localhost:3000/#/reset/${user.email}/${user._id}/${resetToken}`
         //send email to user
         var transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -221,30 +225,78 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc Confirm password for reset
+// @desc Confirm password for change password form
 // @route POST /user/read/password
-// @access Public
+// @access Private
 exports.user_read_password = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {id, password} = req.body;
     //Check for user by email
     const user = await User.findOne({_id: id});
-
     if (!user) {
         res.status(401).json("Invalid id");
     }
-
-    if ((await bcrypt.compare(password, user.password))) {
-        //returns false for matching and true for not matching 
+    //validate jwt token
+    try {
+        //Validates if new password matches old password
+        //Cannot reset password with previous password
+        if (await bcrypt.compare(password, user.password)) {
+            //returns false for matching and true for not matching 
+            res.json({ 
+                passMatch: false,
+            });
+            res.status(200);
+        } else {
+            res.json({ 
+                passMatch: true,
+            });
+            res.status(200);
+        }
+    } catch (err) {
         res.json({ 
             passMatch: false,
-        })
-    } else {
-        res.json({ 
-            passMatch: true,
-        })
+            error: err
+        });
+        res.status(400);
     }
-    res.status(200).json(req.user)
+});
+
+// @desc Confirm password for reset
+// @route POST /user/read/password/reset
+// @access Public
+exports.user_read_password_reset = asyncHandler(async (req, res) => {
+    //read user data from db and send public data
+    const {id, password, token} = req.body;
+    //Check for user by email
+    const user = await User.findOne({_id: id});
+    if (!user) {
+        res.status(401).json("Invalid id");
+    }
+    //validate jwt token
+    const secret = process.env.JWT_SECRET + user.password;
+    try {
+        const payload = jwt.verify(token, secret);
+        //Validates if new password matches old password
+        //Cannot reset password with previous password
+        if (await bcrypt.compare(password, user.password)) {
+            //returns false for matching and true for not matching 
+            res.json({ 
+                passMatch: false,
+            });
+            res.status(200);
+        } else {
+            res.json({ 
+                passMatch: true,
+            });
+            res.status(200);
+        }
+    } catch (err) {
+        res.json({ 
+            passMatch: false,
+            error: err
+        });
+        res.status(400);
+    }
 });
 
 // @desc validate and update new password

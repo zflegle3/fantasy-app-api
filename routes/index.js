@@ -45,6 +45,11 @@ router.post("/user/forgetpass", user_controller.user_forget_post);
 //POST request for reading/confirming user password for reset
 router.post("/user/read/password",  user_controller.user_read_password);
 
+//POST request for reading/confirming user password for reset
+//PRIVATE
+//** Used to validate user's current password for reset */
+router.post("/user/read/reset", user_controller.user_read_password_reset);
+
 // POST request to reset password in db 
 router.post("/user/resetpass/", user_controller.user_reset_post);
 
