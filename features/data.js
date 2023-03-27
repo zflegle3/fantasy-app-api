@@ -4,7 +4,6 @@ const { v4: uuidv4 } = require('uuid');
 const pdfParse = require("pdf-parse");
 const fs = require('fs');
 const file = "./documents/2023.pdf"
-const Player = require("../models/player")
 
 
 
@@ -18,7 +17,6 @@ const loadPlayers = async () => {
 
     //Slice text string to only players lines
     let end = temp.indexOf("Past champions not playing: ")
-    console.log(end);
     let players = temp.slice(4,end);
 
     //Index through players and format name
@@ -30,11 +28,12 @@ const loadPlayers = async () => {
         let playerNamesAll = selectedPlayer[0].trim().split(" ")
         //First Name
         let first = playerNamesAll[0];
+        // console.log(playerNamesAll);
         //Last Name
         let last = "";
         if (playerNamesAll.length > 2) {
-            playerNamesAll.slice(1);
-            last = playerNamesAll.join(" ")
+            // playerNamesAll.slice(1);
+            last = playerNamesAll.slice(1).join(" ")
         } else {
             last = playerNamesAll[1]
         }
@@ -46,6 +45,100 @@ const loadPlayers = async () => {
     return playersOut
 }
 
+const updatePlayerRanks = async () => {
+    // const ranksUrl = "https://www.espn.com/golf/rankings";
+    const url = "https://www.cbssports.com/golf/rankings/";
+    const response = await axios.get(url)
+    .catch(function (err) {
+        console.log("ERROR WITH REF SITE,", err)
+    });
+    const html = response.data;
+    const $ = cheerio.load(html);
+    //Table elements
+    const ranks = []
+    const table = $('#TableBase').find('tbody');
+    $(table).find("tr").each(async function() {
+        const rank = $(this).find("td:nth-child(1)").text().trim();
+        const name = $(this).find("td:nth-child(2)").find(".CellPlayerName--long").find("a").text().split(" ");
+        const country = $(this).find("td:nth-child(3)").text().trim();
+        const average = $(this).find("td:nth-child(4)").text().trim();
+        const total = $(this).find("td:nth-child(5)").text().trim();
+        let earnings = $(this).find("td:nth-child(6)").text().trim();
+        if (earnings.length > 1) {
+            earnings = earnings.slice(1);
+        } else {
+            earnings = "0"
+        }
+        const lost = $(this).find("td:nth-child(7)").text().trim();
+        const gained = $(this).find("td:nth-child(8)").text().trim();
+        const events = $(this).find("td:nth-child(9)").text().trim();
+
+        if (name && rank) {
+            ranks.push({
+                first_name: name[0],
+                family_name: name.slice(1).join(" "),
+                country: country,
+                rank: rank,
+                total: total,
+                average: average,
+                lost: lost,
+                gained: gained,
+                earnings: earnings,
+                events, events,
+            })
+        }
+    });
+    return ranks
+    // return $.html()
+}
 
 
-module.exports = { loadPlayers }
+
+
+const updatePlayerFedex = async () => {
+    const url = "https://www.cbssports.com/golf/rankings/cup-points/";
+    const response = await axios.get(url)
+    .catch(function (err) {
+        console.log("ERROR WITH REF SITE,", err)
+    });
+    const html = response.data;
+    const $ = cheerio.load(html);
+    //Table elements
+    const fedex = []
+    const table = $('#TableBase').find('tbody');
+    $(table).find("tr").each(async function() {
+        const standing = $(this).find("td:nth-child(1)").text().trim();
+        const name = $(this).find("td:nth-child(2)").find(".CellPlayerName--long").find("a").text().split(" ");
+        const country = $(this).find("td:nth-child(3)").text().trim();
+        const points = $(this).find("td:nth-child(4)").text().trim();
+        const wins = $(this).find("td:nth-child(4)").text().trim();
+        const top10 = $(this).find("td:nth-child(5)").text().trim();
+        const top25 = $(this).find("td:nth-child(6)").text().trim();
+        const scoreAvg = $(this).find("td:nth-child(9)").text().trim();
+        const strokes = $(this).find("td:nth-child(10)").text().trim();
+        const rounds = $(this).find("td:nth-child(11)").text().trim();
+
+        if (name && standing) {
+            fedex.push({
+                first_name: name[0],
+                family_name: name.slice(1).join(" "),
+                country: country,
+                standing: standing,
+                points: points,
+                wins: (wins === "—" ? 0 : wins),
+                top10: (top10 === "—" ? 0 : top10),
+                top25: (top25 === "—" ? 0 : top25),
+                top10: (top10 === "—" ? 0 : top10),
+                scoreAvg: scoreAvg,
+                strokes: strokes,
+                rounds: rounds,
+            })
+        }
+    });
+    return fedex
+    // return $.html()
+}
+
+
+
+module.exports = { loadPlayers, updatePlayerRanks, updatePlayerFedex }

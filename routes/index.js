@@ -105,9 +105,11 @@ router.get("/player/:id", player_controller.player_read_get);
 // GET request for reading Messages.
 router.post("/player/add_db", player_controller.player_add_db_all);
 
+// PUT request for reading Messages.
+router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
 
-// GET request for reading Messages.
-router.put("/player/update_stats", player_controller.player_update_stats_all);
+// PUTrequest for reading Messages.
+router.put("/player/update/fedex", player_controller.player_update_fedex_all);
 
 
 

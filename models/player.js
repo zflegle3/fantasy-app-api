@@ -5,6 +5,11 @@ const Schema = mongoose.Schema;
 const PlayerSchema = new Schema({
     first_name: { type: String, required: true, maxLength: 100 },
     family_name: { type: String, required: true, maxLength: 100 },
+    country: { type: String, maxLength: 100 },
+    tourneyStatus: { type: Boolean, default: false},
+    world: {type: Object},
+    fedex: {type: Object},
+
 });
 
 // Virtual for player's full name
