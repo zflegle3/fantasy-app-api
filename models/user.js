@@ -9,6 +9,10 @@ const UserSchema = new Schema({
     first_name: { type: String, maxLength: 100 },
     family_name: { type: String, maxLength: 100 },
     leagues: [],
+    chats: [],
+    favorites: [], //string of player ids
+    color: { type: String, maxLength: 100 }, //hex code of color
+    profileImage: { type: String },
 }, {
   timestamps: true,
 });

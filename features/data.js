@@ -140,5 +140,29 @@ const updatePlayerFedex = async () => {
 }
 
 
+const executeChallenge = async () => {
+    let url = "https://tns4lpgmziiypnxxzel5ss5nyu0nftol.lambda-url.us-east-1.on.aws/challenge";
+    const response = await axios.get(url)
+    .catch(function (err) {
+        console.log("ERROR WITH REF SITE,", err)
+    });
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const body = $('body');
+    let decoded = ""
+    $(body).find("section[id^=11]").each(async function() {
+        let endsWith = $(this).find("main[id$=22]")
+        if (endsWith.length > 0) {
+            let contains = $(endsWith).find("article[id*=33]")
+            if (contains.length > 0) {
+                value = $(contains).find("p.flag").attr("value");
+                decoded += value;
+            };
+        };
+    });
+    return decoded;
+}
 
-module.exports = { loadPlayers, updatePlayerRanks, updatePlayerFedex }
+
+
+module.exports = { loadPlayers, updatePlayerRanks, updatePlayerFedex, executeChallenge  }

@@ -4,11 +4,31 @@ const { loadPlayers, updatePlayerRanks, updatePlayerFedex } = require("../featur
 
 
 
-// Handle read league data on GET.
-exports.player_read_get = (req, res) => {
-    //get player information
-    res.send("NOT IMPLEMENTED: Player read data, GET");
+
+// Returns all player information
+exports.player_read_all = async (req, res) => {
+    const players = await Player.find({})
+    if (players) {
+        res.send(players);
+        res.status(200);
+    } else {
+        res.send("Error, could not find player data");
+        res.status(500);
+    }
 };
+
+
+
+
+
+
+// Returns single player information by id
+exports.player_read_id = (req, res) => {
+    //get player information
+    res.send("NOT IMPLEMENTED: Returns individual player data by id");
+};
+
+
 
 
 
@@ -151,6 +171,11 @@ exports.player_update_world_ranks_all = async (req, res) => {
         errors: playersError,
     })
 };
+
+
+
+
+
 
 
 exports.player_update_fedex_all = async (req, res) => {

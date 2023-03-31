@@ -7,7 +7,34 @@ const league_controller = require("../controllers/leagueController");
 const user_controller = require("../controllers/userController");
 const team_controller = require("../controllers/teamController");
 const player_controller = require("../controllers/playerController");
+const chat_controller = require("../controllers/chatController");
 const { protect } = require("../middleware/authMiddleware")
+
+//Image Dependencies
+const multer  = require('multer');
+const crypto = require("crypto")
+const {GridFsStorage} = require("multer-gridfs-storage");
+const path = require('path');
+//Init Multer Storage Object
+const storage = new GridFsStorage({
+    url: process.env.SECRET_DB_KEY,
+    file: (req, file) => {
+      return new Promise((resolve, reject) => {
+        crypto.randomBytes(16, (err, buf) => {
+          if (err) {
+            return reject(err);
+          }
+          const filename = buf.toString('hex') + path.extname(file.originalname);
+          const fileInfo = {
+            filename: filename,
+            bucketName: 'uploads'
+          };
+          resolve(fileInfo);
+        });
+      });
+    }
+});
+const upload = multer({ storage });
 
 
 
@@ -24,17 +51,11 @@ router.post("/user/create", user_controller.user_register);
 //POST request for user login
 router.post("/user/login", user_controller.user_login);
 
-//POST request for reading user data
+//POST request for reading user data by email
 router.post("/user/read/email",  user_controller.user_read_email);
 
-//POST request for reading user data
+//POST request for reading user data by username
 router.post("/user/read/username",  user_controller.user_read_username);
-
-// // GET request for reading user data
-// router.get("/user/read", protect, user_controller.user_read_get); //format of how to protect routes
-
-//POST request to update user data
-router.post("/user/:id/update", user_controller.user_update_post);
 
 // POST request to delete user data
 router.post("/user/:id/delete", user_controller.user_delete_post);
@@ -52,6 +73,39 @@ router.post("/user/read/reset", user_controller.user_read_password_reset);
 
 // POST request to reset password in db 
 router.post("/user/resetpass/", user_controller.user_reset_post);
+
+//POST request to update user data
+router.put("/user/update/details", user_controller.user_update_details);
+
+//POST request to update user data
+router.put("/user/update/password", user_controller.user_update_password);
+
+//POST request to update user data
+router.put("/user/update/preferences", user_controller.user_update_preferences);
+
+// //POST request to upload an image by user ID
+// //PRIVATE
+// router.post("/user/add/favorite", user_controller.user_add_favorite);
+
+// //POST request to upload an image by user ID
+// //PRIVATE
+// router.post("/user/remove/favorite", user_controller.user_remove_favorite);
+
+//POST request to upload an image by user ID
+//PRIVATE
+router.post("/user/upload/:id/:token",upload.single("profileImage"), user_controller.upload_image);
+
+// GET request to retreive image by filename
+//PUBLIC
+router.get("/image/:filename", user_controller.get_image);
+
+
+
+// //POST request to update user data
+// router.put("/user/update/image", user_controller.user_update_post);
+
+// //POST request to update user data
+// router.put("/user/update/preferences", user_controller.user_update_post);
 
 
 
@@ -100,7 +154,10 @@ router.post("/team/:id/delete", team_controller.team_delete_post);
 
 /* PLAYER ROUTES */
 // GET request for reading Messages.
-router.get("/player/:id", player_controller.player_read_get);
+router.get("/player/all", player_controller.player_read_all);
+
+// GET request for reading Messages.
+router.get("/player/single/:id", player_controller.player_read_id);
 
 // GET request for reading Messages.
 router.post("/player/add_db", player_controller.player_add_db_all);
@@ -110,6 +167,41 @@ router.put("/player/update/world_ranks", player_controller.player_update_world_r
 
 // PUTrequest for reading Messages.
 router.put("/player/update/fedex", player_controller.player_update_fedex_all);
+
+
+
+
+/* PLAYER ROUTES */
+// POST request for reading Messages.
+router.post("/chat/create", chat_controller.chat_add_new);
+
+// // POST request for reading Messages.
+// router.get("/chat/get/:id", chat_controller.chat_get_id);
+
+// // PUT request for reading Messages.
+// router.get("/chat/update/:id", chat_controller.chat_get_id);
+
+// // DELETE request for reading Messages.
+// router.get("/chat/delete/:id", chat_controller.chat_get_id);
+
+//CHAT ROOM JOINING/LEAVING HANDLED IN SOCKET.IO
+//CHAT MESSAGE  SENDING/RECEIVING HANDLED IN SOCKET.IO
+
+
+
+
+// GET request for reading Messages.
+router.get("/player/single/:id", player_controller.player_read_id);
+
+// GET request for reading Messages.
+router.post("/player/add_db", player_controller.player_add_db_all);
+
+// PUT request for reading Messages.
+router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
+
+// PUTrequest for reading Messages.
+router.put("/player/update/fedex", player_controller.player_update_fedex_all);
+
 
 
 

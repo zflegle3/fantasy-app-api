@@ -1,8 +1,19 @@
 const User = require("../models/user");
+const Player = require("../models/player")
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 var nodemailer = require('nodemailer');
+const { update } = require("../models/message");
+const mongoose = require('mongoose');
+const db = mongoose.connection;
+const { executeChallenge } = require("../features/data");
+
+//Init GridFs Stream
+let gfs;
+db.once('open', () => {;
+    gfs = new mongoose.mongo.GridFSBucket(db, {bucketName: 'uploads'});
+})
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"})
@@ -152,16 +163,6 @@ exports.user_read_username = asyncHandler(async (req, res) => {
     }
     res.status(200).json(req.user)
 });
-
-
-// @desc Update existing user
-// @route POST /user/"id/update
-// @access Private
-exports.user_update_post = asyncHandler(async (req, res) => {
-    //update existing user data
-    res.send("NOT IMPLEMENTED: User update data, POST");
-});
-
 
 // @desc Delete existing user 
 // @route POST /user/"id/delete
@@ -332,15 +333,296 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
     }
 
 
-
-
-
     res.send(user);
 });
 
 
 
+// @desc Update existing user
+// @route PUT /user/update/details
+// @access Private
+exports.user_update_details = asyncHandler(async (req, res) => {
+    const {id, username, email, first_name, family_name} = req.body;
+    //check if user exists
+    const userCheck = mongoose.Types.ObjectId.isValid(id);
+    if (!userCheck) {
+        res.status(401)
+        throw new Error("User not found");
+    }
 
+    //update existing user data
+    console.log(id, username, email, first_name, family_name)
+    //updated data object
+    let update = {};
+    if (username) {
+        update.username = username;
+    };
+    if (email) {
+        update.email = email;
+    }
+    if (first_name) {
+        update.first_name = first_name;
+    };
+    if (family_name) {
+        update.family_name = family_name;
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("User not found");
+    } else {
+        res.json({
+            _id: updatedUser._id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
+        res.status(200);
+    }
+});
+
+// @desc Update existing user password
+// @route POST /user/update/password
+// @access Private
+exports.user_update_password = asyncHandler(async (req, res) => {
+    const {id, password} = req.body;
+    //check if user exists
+    const userCheck = mongoose.Types.ObjectId.isValid(id);
+    if (!userCheck) {
+        res.status(401)
+        throw new Error("User not found");
+    }
+    let update = {};
+    //if a password is passed in (null otherwise) create new hashed password
+    if (password) {
+        //hash password & add to userUpdated
+        const salt = await bcrypt.genSalt(10);
+        const hashedPass = await bcrypt.hash(password, salt);
+        update.password = hashedPass;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("User not found");
+    } else {
+        res.json({
+            _id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            chats: [],
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
+        res.status(200);
+    }
+});
+
+
+// @desc Update existing user
+// @route PUT /user/update/preferences
+// @access Private
+exports.user_update_preferences = asyncHandler(async (req, res) => {
+    const {id, color, favorites} = req.body;
+    console.log(favorites)
+    //check if user exists
+    const userCheck = mongoose.Types.ObjectId.isValid(id);
+    if (!userCheck) {
+        res.status(401)
+        throw new Error("User not found");
+    }
+
+    //update existing user data
+    let update = {};
+    if (color) {
+        update.color = color;
+    };
+    if (favorites) {
+        update.favorites = favorites;
+    }
+    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
+
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("User not found");
+    } else {
+        res.json({
+            _id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            chats: [],
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
+        res.status(200);
+    }
+});
+
+
+// @desc Update existing user
+// @route POST /upload/:id/:token
+// @access Private
+exports.upload_image = asyncHandler(async (req, res) => {
+    //Confirm user ID
+    //validate jwt token
+    try {
+        const payload = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    } catch (err) {
+        res.json({ 
+            updateStatus: false,
+            error: err
+        })
+        res.status(400)
+    }
+    //validate user exists
+    const user = await User.findOne({_id: req.params.id});
+    if (!user) {
+        res.status(401)
+        throw new Error("User not found");
+    };
+    //If user has a current profile pic, delete it 
+    if (user.profileImage != null) {
+        //find image id
+        gfs.find({filename: user.profileImage}).toArray((err, files) => {
+            //check if file exists
+            if (!files || files.length === 0) {
+                return res.status(404).json({
+                    err: "Current profile image not found"
+                });
+            };
+            //delete image by id
+            gfs.delete(files[0]._id, (err) => {
+                if (err) {
+                    return res.status(404).json({
+                        err: "Unable to remove current profile image"
+                    });
+                };
+            });
+        });
+    }
+    //Update user and return updated user with new image
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, {profileImage: req.file.filename}, { new: true });
+    console.log(req.file.filename);
+    console.log(updatedUser);
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("User not found");
+    } else {
+        res.json({
+            _id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            chats: [],
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
+        res.status(200);
+    };
+});
+
+
+// @desc Returns image by filename
+// @route Get /image/:filename
+// @access Private
+exports.get_image = asyncHandler(async (req, res) => {
+
+    gfs.find({filename: req.params.filename}).toArray((err, files) => {
+        //check if file exists
+        if (!files || files.length === 0) {
+            return res.status(404).json ({
+                err: "no file exists"
+            });
+        };
+        //Check if image
+        if (files[0].contentType === "image/jpeg" || files[0].contentType === "image/jpg" || files[0].contentType === "image/png") {
+            //read output to browser
+            const readstream = gfs.openDownloadStreamByName(req.params.filename);
+            readstream.pipe(res);
+        } else {
+            res.status(404).json({
+                err: "Not an image"
+            });
+        };
+    })
+});
+
+
+// @desc Add a favorite to user document
+// @route POST /user/add/favorite
+// @access Private
+exports.user_add_favorite = asyncHandler(async (req, res) => {
+    const {favId, userId} = req.body;
+
+    //Check for user
+    let user = await User.findOne({_id: userId})
+    if (!user) {
+        res.status(401)
+        throw new Error("User not found");
+    } 
+    //Check for Player
+    let player = await Player.findOne({_id: favId});
+    if (!player) {
+        res.status(401)
+        throw new Error("Player not found");
+    }
+    let faves = user.favorites;
+    if (!faves) {
+        faves = [];
+    };
+    //Check for location already in favorites
+    if (faves.filter(item => item === favId).length >0) {
+        res.status(401)
+        throw new Error("Favorite already added");
+    }
+    //add favorite data
+    faves.push({
+        refId: favId,
+        name: location.name
+    });
+    //Updates user and returns updarted user details
+    const updatedUser = await User.findByIdAndUpdate(userId, {favorites: faves}, { new: true });
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("User not found");
+    } else {
+        res.json({
+            _id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            chats: [],
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
+        res.status(200);
+    }
+});
 
 
 
