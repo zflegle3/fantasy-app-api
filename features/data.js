@@ -140,29 +140,51 @@ const updatePlayerFedex = async () => {
 }
 
 
-const executeChallenge = async () => {
-    let url = "https://tns4lpgmziiypnxxzel5ss5nyu0nftol.lambda-url.us-east-1.on.aws/challenge";
+const updatePlayerLeaderboard = async () => { 
+    const url = "https://www.cbssports.com/golf/leaderboard/pga-tour/";
     const response = await axios.get(url)
     .catch(function (err) {
         console.log("ERROR WITH REF SITE,", err)
     });
     const html = response.data;
     const $ = cheerio.load(html);
-    const body = $('body');
-    let decoded = ""
-    $(body).find("section[id^=11]").each(async function() {
-        let endsWith = $(this).find("main[id$=22]")
-        if (endsWith.length > 0) {
-            let contains = $(endsWith).find("article[id*=33]")
-            if (contains.length > 0) {
-                value = $(contains).find("p.flag").attr("value");
-                decoded += value;
-            };
-        };
+    const leaderboard = []
+    const table = $('#TableGolfLeaderboard').find('tbody');
+    $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
+        const pos = $(this).find("td:nth-child(2)").text().trim();
+        const country = $(this).find("td:nth-child(3)").find("img").attr("title");
+        const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
+        const toPar = $(this).find("td:nth-child(5)").text().trim();
+        const thru = $(this).find("td:nth-child(6)").text().trim();
+        const today = $(this).find("td:nth-child(7)").text().trim();
+        const rOne = $(this).find("td:nth-child(8)").text().trim();
+        const rTwo = $(this).find("td:nth-child(9)").text().trim();
+        const rThree = $(this).find("td:nth-child(10)").text().trim();
+        const rFour = $(this).find("td:nth-child(11)").text().trim();
+        const total = $(this).find("td:nth-child(12)").text().trim();
+
+        if (name && pos) {
+            leaderboard.push({
+                first_name: name[0],
+                family_name: name.slice(1).join(" "),
+                country: country,
+                pos: pos,
+                toPar: toPar,
+                thru: thru,
+                today: today,
+                rOne: rOne, 
+                rTwo: rTwo,
+                rThree: rThree,
+                rFour: rFour,
+                total, total,
+            })
+        }
     });
-    return decoded;
+    return leaderboard;
+
+
 }
 
 
 
-module.exports = { loadPlayers, updatePlayerRanks, updatePlayerFedex, executeChallenge  }
+module.exports = { loadPlayers, updatePlayerRanks, updatePlayerFedex, updatePlayerLeaderboard  }

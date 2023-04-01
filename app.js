@@ -7,6 +7,7 @@ var logger = require('morgan');
 const { errorHandler } = require("./middleware/errorMiddleware");
 const bodyParser = require('body-parser');
 const { Server} = require("socket.io")
+const msg_controller = require("./controllers/messageController");
 
 //Socket.io & messaging dependencies
 const http = require("http")
@@ -59,6 +60,7 @@ io.on("connection", socket => {
         console.log(data);
         //save message to backend
             //call to db**
+        msg_controller.msg_add_new(data)
         //send message back to users
         socket.emit("receive_message", data);
     })

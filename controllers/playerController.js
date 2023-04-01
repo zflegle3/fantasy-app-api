@@ -1,5 +1,5 @@
 const Player = require("../models/player");
-const { loadPlayers, updatePlayerRanks, updatePlayerFedex } = require("../features/data");
+const { loadPlayers, updatePlayerRanks, updatePlayerLeaderboard } = require("../features/data");
 
 
 
@@ -223,6 +223,7 @@ exports.player_update_fedex_all = async (req, res) => {
                 standing: null,
             }
         };
+
         //Players in DB and Top 200
         if (golferData.length > 0) {
             // console.log(golferData)
@@ -230,7 +231,7 @@ exports.player_update_fedex_all = async (req, res) => {
                 country: golferData[0].country,
                 fedex: {
                     standing: golferData[0].standing,
-                    ppints: golferData[0].points,
+                    points: golferData[0].points,
                     wins: golferData[0].wins,
                     top10: golferData[0].top10,
                     top25: golferData[0].top25,
@@ -260,7 +261,7 @@ exports.player_update_fedex_all = async (req, res) => {
             country: newPlayers[j].country,
             fedex: {
                 standing: newPlayers[j].standing,
-                ppints: newPlayers[j].points,
+                points: newPlayers[j].points,
                 wins: newPlayers[j].wins,
                 top10: newPlayers[j].top10,
                 top25: newPlayers[j].top25,
@@ -285,6 +286,34 @@ exports.player_update_fedex_all = async (req, res) => {
         playersAdded: playersAdded,
         errors: playersError,
     });
+};
+
+
+
+exports.player_update_leaderboard_all = async (req, res) => {
+    //reporting stats
+    let playersAdded = 0;
+    let playersUpdated = 0;
+    let playersError = [];
+
+    //Pull Golf World Rankings Data
+    result = await updatePlayerLeaderboard();
+    // { EX RESULT:
+    //     "first_name": "Jon",
+    //     "family_name": "Rahm",
+    //     "country": "esp",
+    //     "standing": "1",
+    //     "points": "2031",
+    //     "wins": "2031",
+    //     "top10": "3",
+    //     "top25": "6",
+    //     "scoreAvg": "9",
+    //     "strokes": "68.0",
+    //     "rounds": "1973"
+    // },
+
+    res.status(200)
+    res.send(result);
 };
 
 

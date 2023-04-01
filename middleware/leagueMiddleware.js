@@ -1,6 +1,8 @@
 const Team = require("../models/team");
 const Player = require("../models/player");
+const Chat = require("../models/chat")
 const PlayerInstance = require("../models/playerinstance");
+const { v4: uuidv4 } = require('uuid');
 
 const populateTeams = async (teamQty, playerQty, admin) => {
     //for teamQty # of teams, create a team w/ playerQty # of roster spots
@@ -57,4 +59,15 @@ const populatePlayers = async () => {
     return availablePlayers;
 }
 
-module.exports = {populatePlayers, populateTeams};
+const populateChat = async (username) => {
+
+    const leagueChat = await Chat.create({
+        name: "league chat",
+        refId: uuidv4(),
+        members: [username],
+        messages: [{username: username, time: new Date(), msg: "League Created"}],
+    })
+    return leagueChat._id;
+}
+
+module.exports = {populatePlayers, populateTeams, populateChat};

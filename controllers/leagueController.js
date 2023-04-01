@@ -4,47 +4,86 @@ const League = require("../models/league");
 // const PlayerInstance = require("../models/playerinstance");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/user");
-const { populatePlayers, populateTeams } = require("../middleware/leagueMiddleware");
+const { populatePlayers, populateTeams, populateChat } = require("../middleware/leagueMiddleware");
+const jwt = require("jsonwebtoken");
 
+
+const generateToken = (id) => {
+    return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"})
+}
 
 // @desc Create a new league
 // @route POST /league/create
 // @access Private
 exports.league_create_post = asyncHandler(async(req, res) => {
+    console.log("called", new Date());
     //protected route so can use req.user for user data
     //get data from body
-    const {name, settings, activity, year, draft} = req.body;
+    const {adminId, name, settings, activity, year, draft} = req.body;
+    // const chatId = await populateChat();
+    //Check for user
+    let admin = await User.findOne({_id: adminId})
+    if (!admin) {
+        res.status(401)
+        throw new Error("User not found");
+    } 
+    console.log("found user", new Date());
     //populate any additional data (teams, freeAgent players)
     const players = await populatePlayers();
     const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize,req.user);
-    // const leagueSettings = {
-    //     schedule: settings.schedule,
-    //     teamCount: settings.teamCount,
-    //     missCutScore: settings.missCutScore,
-    //     rosterCut: settings.rosterCut,
-    //     rosterSize: settings.rosterSize
-    // }
+    const chatId = await populateChat(admin.username);
     //create new League Modal object with body data
-    try {
-        const league = await League.create({
-            name: name,
-            // admin: { type: String, required: true }, 
-            admin: req.user._id,
-            settings: settings,
-            managers: [req.user._id], //array of user models
-            teams: teamsAll, //array of team models
-            activity: activity,
-            freeAgents: players,
-            year: year,
-            draft: draft
-        })
-        res.json(league)
+    const league = await League.create({
+        name: name,
+        admin: adminId,
+        settings: settings,
+        managers: [adminId], //array of user models
+        teams: teamsAll, //array of team models
+        activity: activity,
+        freeAgents: players,
+        year: year,
+        draft: draft,
+        chat: chatId,
+    });
+    console.log("created league", new Date());
+    if (!league) {
+        res.status(400)
+        throw new Error("Unable to create league")
+    };
+    //Add league to user's leagues array
+    let leaguesNew = [...admin.leagues];
+    if (!leaguesNew) {
+        leaguesNew = [];
+    };
+    leaguesNew.push({
+        id: league._id,
+        name: league.name,
+    })
+    //Update user with new leagues data
+    const updatedUser = await User.findByIdAndUpdate(adminId, {leagues: leaguesNew}, {new: true});
+    if (!updatedUser) {
+        res.status(401)
+        throw new Error("Unable to update user with new league");
+    } else {
+        console.log("updated user", new Date());
+        //returns updated admin user profile on success
+        res.json({
+            _id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            first_name: updatedUser.first_name,
+            family_name: updatedUser.family_name,
+            favorites: updatedUser.favorites,
+            leagues: updatedUser.leagues,
+            chats: [],
+            color: updatedUser.color,
+            profileImage: updatedUser.profileImage,
+            token: generateToken(updatedUser._id),
+        });
         res.status(200);
-    } catch (err) {
-        res.json({error: err})
-        res.status(400);
     }
 });
+
 
 // @desc Return leagues by user 
 // @route GET league/getAll

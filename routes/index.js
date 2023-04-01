@@ -168,15 +168,21 @@ router.put("/player/update/world_ranks", player_controller.player_update_world_r
 // PUTrequest for reading Messages.
 router.put("/player/update/fedex", player_controller.player_update_fedex_all);
 
+// PUTrequest for updating leaderboard
+router.put("/player/update/leaderboard", player_controller.player_update_leaderboard_all);
 
 
 
-/* PLAYER ROUTES */
+
+/* Chat ROUTES */
 // POST request for reading Messages.
-router.post("/chat/create", chat_controller.chat_add_new);
+router.post("/chat/create/new", chat_controller.chat_add_new);
 
-// // POST request for reading Messages.
-// router.get("/chat/get/:id", chat_controller.chat_get_id);
+// POST request for reading Messages.
+// router.post("/chat/create/league", chat_controller.chat_add_new);
+
+// POST request for reading Messages.
+router.post("/chat/get/id", chat_controller.chat_get_id);
 
 // // PUT request for reading Messages.
 // router.get("/chat/update/:id", chat_controller.chat_get_id);

@@ -92,9 +92,13 @@ exports.user_login = asyncHandler(async (req, res) => {
             email: userEmail.email,
             first_name: userEmail.first_name,
             family_name: userEmail.family_name,
+            favorites: userEmail.favorites,
             leagues: userEmail.leagues,
+            chats: userEmail.chats,
+            color: userEmail.color,
+            profileImage: userEmail.profileImage,
             token: generateToken(userEmail._id),
-        })
+        });
     } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
         res.json({
             _id: userUsername.id,
@@ -102,9 +106,13 @@ exports.user_login = asyncHandler(async (req, res) => {
             email: userUsername.email,
             first_name: userUsername.first_name,
             family_name: userUsername.family_name,
+            favorites: userUsername.favorites,
             leagues: userUsername.leagues,
+            chats: userUsername.chats,
+            color: userUsername.color,
+            profileImage: userUsername.profileImage,
             token: generateToken(userUsername._id),
-        })
+        });
     } else {
         res.status(400).json({error: "wrong email pal"}); //change back to 400
         // throw new Error("Invalid credentials")
@@ -359,7 +367,7 @@ exports.user_update_details = asyncHandler(async (req, res) => {
     };
     if (email) {
         update.email = email;
-    }
+    };
     if (first_name) {
         update.first_name = first_name;
     };

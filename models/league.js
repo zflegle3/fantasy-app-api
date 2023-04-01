@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
 
 // const SettingsSchema = new Schema({
@@ -12,7 +11,6 @@ const Schema = mongoose.Schema;
 
 const LeagueSchema = new Schema({
   name: { type: String, required: true },
-  // admin: { type: String, required: true }, 
   admin: { type: Schema.Types.ObjectId, ref: "User" },
   settings: {type: Map, required: true}, 
   managers: [{ type: Schema.Types.ObjectId, ref: "User" }], //array of user models
@@ -21,6 +19,7 @@ const LeagueSchema = new Schema({
   freeAgents: { type : Array , "default" : [] },
   year:{ type : Number , "default" : 2023 },
   draft: {type: Map, required: true}, 
+  chat: { type: String, required: true },
 },{
   timestamps: true,
 });
