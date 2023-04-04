@@ -83,6 +83,9 @@ router.put("/user/update/password", user_controller.user_update_password);
 //POST request to update user data
 router.put("/user/update/preferences", user_controller.user_update_preferences);
 
+//POST request to update user data
+router.get("/user/read/all", user_controller.user_read_all);
+
 // //POST request to upload an image by user ID
 // //PRIVATE
 // router.post("/user/add/favorite", user_controller.user_add_favorite);
@@ -119,7 +122,6 @@ router.post("/message/create", message_controller.message_create_post);
 
 
 /* LEAGUE ROUTES */
-
 //POST request for creating a new League collection.
 router.post("/league/create",protect, league_controller.league_create_post);
 
@@ -130,10 +132,16 @@ router.get("/league/getAll",protect, league_controller.league_read_getAll);
 router.post("/league/getOne",protect, league_controller.league_read_getOne);
 
 //POST request to update League data.
-router.post("/league/:id/update", league_controller.league_update_post);
+router.put("/league/update/settings", league_controller.league_update_settings);
 
 // POST request to delete League data
 router.post("/league/:id/delete", league_controller.league_delete_post);
+
+// POST request to delete League data
+router.put("/league/update/passcode-in", league_controller.league_update_passcode_in);
+
+// POST request to delete League data
+router.put("/league/update/passcode-auto", league_controller.league_update_passcode_auto);
 
 
 

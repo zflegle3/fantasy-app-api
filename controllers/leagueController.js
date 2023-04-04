@@ -6,6 +6,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user");
 const { populatePlayers, populateTeams, populateChat } = require("../middleware/leagueMiddleware");
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require('uuid');
 
 
 const generateToken = (id) => {
@@ -30,7 +31,7 @@ exports.league_create_post = asyncHandler(async(req, res) => {
     console.log("found user", new Date());
     //populate any additional data (teams, freeAgent players)
     const players = await populatePlayers();
-    const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize,req.user);
+    const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize, adminId);
     const chatId = await populateChat(admin.username);
     //create new League Modal object with body data
     const league = await League.create({
@@ -123,8 +124,93 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
 });
 
 // Handle league data update on POST.
-exports.league_update_post = (req, res) => {
-    res.send("NOT IMPLEMENTED: League update data, POST");
+exports.league_update_settings = async (req, res) => {
+    const {id, adminId, name, teamCount, rosterSize, rosterCut, missCutScore} = req.body;
+    //comfirm league id
+    let leagueCheck = await League.findOne({_id: id});
+    if (!leagueCheck) {
+        res.status(401)
+        throw new Error("League not found");
+    }
+    //Update valid fields
+    let update = {settings: {
+        schedule: [],
+        proLeague: "pga"
+    }};
+    update.name = name;
+    update.settings.teamCount = teamCount;
+    update.settings.rosterSize = rosterSize;
+    update.settings.rosterCut = rosterCut;
+    update.settings.missCutScore = missCutScore;
+    //update teams if roster size or team qty change
+    if (teamCount != leagueCheck.settings.teamCount || rosterSize != leagueCheck.settings.rosterSize) {
+        const teamsAll = await populateTeams(teamCount, rosterSize, adminId);
+        update.teams= teamsAll;
+        update.managers= [adminId];
+    };
+    const updatedLeague = await League.findByIdAndUpdate(id, update, {new: true});
+    if (updatedLeague) {
+        res.send(updatedLeague);
+        res.status(200);
+    } else {
+        res.json({error: "Unable to update league"});
+        res.status(400);
+    }
+};
+
+// Handle league data update on POST.
+exports.league_update_passcode_in = async (req, res) => {
+    const {id, adminId, passcodeIn} = req.body;
+    console.log(id, adminId, passcodeIn);
+    //comfirm league id
+    let leagueCheck = await League.findOne({_id: id});
+    if (!leagueCheck) {
+        res.status(401)
+        throw new Error("League not found");
+    }
+    if (leagueCheck.admin != adminId) {
+        res.status(401)
+        throw new Error("Incorrect admin, not authorized");
+    }
+    //Update valid fields
+    let update = {};
+    update.passcode = passcodeIn;
+    const updatedLeague = await League.findByIdAndUpdate(id, update, {new: true});
+    if (updatedLeague) {
+        res.send(updatedLeague);
+        res.status(200);
+    } else {
+        res.json({error: "Unable to update league"});
+        res.status(400);
+    }
+};
+
+// Handle league data update on POST.
+exports.league_update_passcode_auto = async (req, res) => {
+    const {id, adminId} = req.body;
+    console.log(id, adminId);
+    //comfirm league id
+    let leagueCheck = await League.findOne({_id: id});
+    if (!leagueCheck) {
+        res.status(401)
+        throw new Error("League not found");
+    }
+    if (leagueCheck.admin != adminId) {
+        res.status(401)
+        throw new Error("Incorrect admin, not authorized");
+    }
+    //Update valid fields
+    let update = {};
+    newCode = uuidv4();
+    update.passcode = newCode;
+    const updatedLeague = await League.findByIdAndUpdate(id, update, {new: true});
+    if (updatedLeague) {
+        res.send(updatedLeague);
+        res.status(200);
+    } else {
+        res.json({error: "Unable to update league"});
+        res.status(400);
+    }
 };
 
 // Handle League data delete on POST.

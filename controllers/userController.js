@@ -357,9 +357,7 @@ exports.user_update_details = asyncHandler(async (req, res) => {
         res.status(401)
         throw new Error("User not found");
     }
-
     //update existing user data
-    console.log(id, username, email, first_name, family_name)
     //updated data object
     let update = {};
     if (username) {
@@ -630,6 +628,44 @@ exports.user_add_favorite = asyncHandler(async (req, res) => {
         });
         res.status(200);
     }
+});
+
+
+// @desc Read all users for invite functionality
+// @route GET /user/read/all
+// @access Public
+exports.user_read_all = asyncHandler(async (req, res) => {
+    const usersRaw = await User.find({});
+    usersOut = []
+    usersRaw.forEach(user => {
+        console.log(user.username)
+        //return username and id
+        usersOut.push({
+            id: user._id,
+            username: user.username,
+        });
+    })
+
+
+
+    // //Check for user by email
+    // const user = await User.findOne({email: email})
+    // console.log("email user", user)
+    // if (user) {
+    //     res.json({
+    //         _id: user.id,
+    //         username: user.username,
+    //         email: user.email,
+    //     })
+    // } else {
+    //     res.json({
+    //         _id: "not valid user",
+    //         username: "not valid user",
+    //         email: "not valid user",
+    //     })
+    // }
+
+    res.status(200).json(usersOut)
 });
 
 

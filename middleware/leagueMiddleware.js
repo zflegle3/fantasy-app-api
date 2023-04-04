@@ -21,10 +21,10 @@ const populateTeams = async (teamQty, playerQty, admin) => {
     for (let i=0; i<teamQty; i++) {
         //populates admin as first team's manager
         let newTeam;
-        if (i===0) {
+        if (i < 1) {
             newTeam = await Team.create({
                 name: `Team ${i+1}`,
-                manager: admin._id,
+                manager: admin,
                 roster: roster,
             })
         } else {
@@ -60,7 +60,6 @@ const populatePlayers = async () => {
 }
 
 const populateChat = async (username) => {
-
     const leagueChat = await Chat.create({
         name: "league chat",
         refId: uuidv4(),

@@ -20,6 +20,7 @@ const LeagueSchema = new Schema({
   year:{ type : Number , "default" : 2023 },
   draft: {type: Map, required: true}, 
   chat: { type: String, required: true },
+  passcode: { type: String,},
 },{
   timestamps: true,
 });
