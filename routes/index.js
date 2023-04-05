@@ -144,6 +144,9 @@ router.put("/league/update/passcode-in", league_controller.league_update_passcod
 router.put("/league/update/passcode-auto", league_controller.league_update_passcode_auto);
 
 // POST request to delete League data
+router.put("/league/update/team", league_controller.league_update_team);
+
+// POST request to delete League data
 router.put("/league/join", league_controller.league_join);
 
 

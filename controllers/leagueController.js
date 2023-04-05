@@ -255,7 +255,7 @@ exports.league_join = async (req, res) => {
     teamsNew[teamIndex].manager = {id: managerId, username: userCheck.username};
     console.log(teamsNew);
     //Update next available team with Manager
-    let updatedLeague = await League.findByIdAndUpdate(leagueCheck._id, {managers: managersNew, teams: teamsNew}).populate("teams")
+    let updatedLeague = await League.findByIdAndUpdate(leagueCheck._id, {managers: managersNew, teams: teamsNew});
     if (!updatedLeague) {
         res.status(500);
         res.send("Unable to update League")
@@ -281,6 +281,38 @@ exports.league_join = async (req, res) => {
         profileImage: updatedUser.profileImage,
         token: generateToken(updatedUser._id),
     });
+};
+
+// Handle league data update on POST.
+exports.league_update_team = async (req, res) => {
+    const {leagueId, managerId, nameIn} = req.body;
+    let leagueCheck = await League.findOne({_id: leagueId});
+    if (!leagueCheck) {
+        res.status(401)
+        res.send({msg: "League not found"})
+    }
+
+ 
+    let teamsTemp = [...leagueCheck.teams];
+
+    let teamsMatch = leagueCheck.teams.filter(team => team.manager.id === managerId);
+    if (teamsMatch.length != 1) {
+        res.status(403)
+        res.send({msg: "Unable to find team"})
+    }
+    let teamUpdated = teamsMatch[0];
+    let index = teamsTemp.indexOf(teamUpdated);
+    teamUpdated.name = nameIn;
+    teamsTemp[index] = teamUpdated;
+
+    let updatedLeague = await League.findByIdAndUpdate(leagueId, {teams: teamsTemp});
+    if (updatedLeague) {
+        res.send(updatedLeague);
+        res.status(200);
+    } else {
+        res.json({error: "Unable to update league"});
+        res.status(400);
+    }
 };
 
 // Handle League data delete on POST.
