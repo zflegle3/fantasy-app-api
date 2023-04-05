@@ -13,7 +13,7 @@ const LeagueSchema = new Schema({
   name: { type: String, required: true },
   admin: { type: Schema.Types.ObjectId, ref: "User" },
   settings: {type: Map, required: true}, 
-  managers: [{ type: Schema.Types.ObjectId, ref: "User" }], //array of user models
+  managers: [], //array of user ids
   teams: [], //array of team models
   activity: { type : Array , "default" : [] },
   freeAgents: { type : Array , "default" : [] },

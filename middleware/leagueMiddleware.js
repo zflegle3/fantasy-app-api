@@ -1,10 +1,10 @@
-const Team = require("../models/team");
+// const Team = require("../models/team");
 const Player = require("../models/player");
 const Chat = require("../models/chat")
 const PlayerInstance = require("../models/playerinstance");
 const { v4: uuidv4 } = require('uuid');
 
-const populateTeams = async (teamQty, playerQty, admin) => {
+const populateTeams = async (teamQty, playerQty, adminId, adminUsername) => {
     //for teamQty # of teams, create a team w/ playerQty # of roster spots
     //return array of teams
     let teamsOut = [];
@@ -22,22 +22,29 @@ const populateTeams = async (teamQty, playerQty, admin) => {
         //populates admin as first team's manager
         let newTeam;
         if (i < 1) {
-            newTeam = await Team.create({
+            newTeam = {
                 name: `Team ${i+1}`,
-                manager: admin,
-                roster: roster,
-            })
-        } else {
-            newTeam = await Team.create({
-                name: `Team ${i+1}`,
+                manager: {id: adminId, username: adminUsername},
                 roster: roster,
                 scores: {
                     rd1: 0,
                     rd2: 0,
                     rd3: 0,
                     rd4: 0
+                },
+            }
+        } else {
+            newTeam = {
+                name: `Team ${i+1}`,
+                roster: roster,
+                manager: {id: null, username: `Manager ${i}`},
+                scores: {
+                    rd1: 0,
+                    rd2: 0,
+                    rd3: 0,
+                    rd4: 0
                 }
-            })
+            }
         }
         teamsOut.push(newTeam);
     }

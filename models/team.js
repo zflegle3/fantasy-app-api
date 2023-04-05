@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const TeamSchema = new Schema({
   name: { type: String, required: true },
   // manager: { type: String,},
-  manager: { type: Schema.Types.ObjectId, ref: "User" },
+  manager: { type: String},
   //not required b/c empty at first
   roster: [],
 });

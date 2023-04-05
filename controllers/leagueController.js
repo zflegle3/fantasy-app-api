@@ -4,6 +4,7 @@ const League = require("../models/league");
 // const PlayerInstance = require("../models/playerinstance");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/user");
+const Team = require("../models/team");
 const { populatePlayers, populateTeams, populateChat } = require("../middleware/leagueMiddleware");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
@@ -31,7 +32,7 @@ exports.league_create_post = asyncHandler(async(req, res) => {
     console.log("found user", new Date());
     //populate any additional data (teams, freeAgent players)
     const players = await populatePlayers();
-    const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize, adminId);
+    const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize, adminId, admin.username);
     const chatId = await populateChat(admin.username);
     //create new League Modal object with body data
     const league = await League.create({
@@ -45,6 +46,7 @@ exports.league_create_post = asyncHandler(async(req, res) => {
         year: year,
         draft: draft,
         chat: chatId,
+        passcode: uuidv4(),
     });
     console.log("created league", new Date());
     if (!league) {
@@ -211,6 +213,74 @@ exports.league_update_passcode_auto = async (req, res) => {
         res.json({error: "Unable to update league"});
         res.status(400);
     }
+};
+
+// Handle league data update on PUT.
+exports.league_join = async (req, res) => {
+    //CHECK PASSCODE TOO
+    //validate if user is already in the league
+    const {leagueName, managerId, passcode} = req.body;
+    console.log(leagueName, managerId, passcode);
+    let leagueCheck = await League.findOne({name: leagueName, passcode: passcode});
+    if (!leagueCheck) {
+        res.status(401)
+        res.send({msg: "League credentials not found"})
+        // throw new Error("League credentials not found");
+    }
+
+    //validate there are enough teams available
+    let managerExists = leagueCheck.managers.filter(managerCurrent => managerCurrent === managerId);
+    console.log(managerExists)
+    if (managerExists.length > 0) {
+        res.status(403)
+        res.send({msg: "User already in league"})
+    }
+    //verify validation**
+    let userCheck = await User.findOne({_id: managerId});
+    if (!userCheck) {
+        res.status(401)
+        res.send({msg: "Manager account not found"})
+    }
+
+    let availableTeams = leagueCheck.teams.filter(team => !team.manager.id)
+    if (availableTeams.length < 1) {
+        res.status(403)
+        res.send({msg: "No teams available"})
+    }
+    //Add manager Id to managers list
+    let managersNew = [...leagueCheck.managers, managerId]
+    console.log(managersNew)
+    let teamIndex = leagueCheck.teams.indexOf(availableTeams[0]);
+    let teamsNew = [...leagueCheck.teams]
+    teamsNew[teamIndex].manager = {id: managerId, username: userCheck.username};
+    console.log(teamsNew);
+    //Update next available team with Manager
+    let updatedLeague = await League.findByIdAndUpdate(leagueCheck._id, {managers: managersNew, teams: teamsNew}).populate("teams")
+    if (!updatedLeague) {
+        res.status(500);
+        res.send("Unable to update League")
+    }
+    //Update User with new league
+    userLeaguesNew = [...userCheck.leagues, {id: leagueCheck._id, name: leagueCheck.name}]
+    let updatedUser = await  User.findByIdAndUpdate(managerId, {managers: managersNew, leagues: userLeaguesNew},  {new: true})
+    if (!updatedUser) {
+        res.status(500);
+        res.send("Unable to update user")
+    }
+    res.status(200);
+    res.json({
+        _id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        first_name: updatedUser.first_name,
+        family_name: updatedUser.family_name,
+        favorites: updatedUser.favorites,
+        leagues: updatedUser.leagues,
+        chats: [],
+        color: updatedUser.color,
+        profileImage: updatedUser.profileImage,
+        token: generateToken(updatedUser._id),
+    });
 };
 
 // Handle League data delete on POST.
