@@ -12,14 +12,11 @@ const msg_controller = require("./controllers/messageController");
 const corsOptions = {
   origin: "*"
 }
-
-//Socket.io & messaging dependencies
-// const http = require("http");
-
-
 //import & configure dotenv
 require('dotenv').config();
 
+//Socket.io & messaging dependencies
+// const http = require("http");
 
 var indexRouter = require('./routes/index');
 
@@ -27,7 +24,7 @@ var app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: '*',
+        origin: "https://zflegle3.github.io/fantasy-golf-app/",
     }
 });
 // const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
@@ -92,7 +89,7 @@ io.on("connect_error", (err) => {
 // view engine setup 
 // app.set("views", path.join(__dirname, "views"));
 // app.set("view engine", "pug");
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
