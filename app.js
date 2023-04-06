@@ -9,6 +9,9 @@ const bodyParser = require('body-parser');
 const { Server} = require("socket.io")
 const { createServer } = require("http");
 const msg_controller = require("./controllers/messageController");
+const corsOptions = {
+  origin: "*"
+}
 
 //Socket.io & messaging dependencies
 // const http = require("http");
@@ -25,8 +28,6 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
         origin: '*',
-        // methods: ["GET", "POST"],
-        // credentials: true,
     }
 });
 // const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
@@ -91,7 +92,7 @@ io.on("connect_error", (err) => {
 // view engine setup 
 // app.set("views", path.join(__dirname, "views"));
 // app.set("view engine", "pug");
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
