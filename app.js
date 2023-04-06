@@ -112,7 +112,7 @@ app.use(function(req, res, next) {
 
 // app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
 // io.listen(8000);
-httpServer.listen(process.env.PORT || 8000);
+httpServer.listen(process.env.PORT || 80);
 
 
 module.exports = app;
