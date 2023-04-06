@@ -24,8 +24,9 @@ var app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer,{
     cors: {
-        origin: '*',
-        methods: ["GET", "POST"],
+        origin: 'http://localhost:3000',
+        // methods: ["GET", "POST"],
+        credentials: true,
     }
 });
 // const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
