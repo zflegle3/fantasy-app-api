@@ -7,27 +7,38 @@ var logger = require('morgan');
 const { errorHandler } = require("./middleware/errorMiddleware");
 const bodyParser = require('body-parser');
 const { Server} = require("socket.io")
+const { createServer } = require("http");
 const msg_controller = require("./controllers/messageController");
 
 //Socket.io & messaging dependencies
-const http = require("http")
+// const http = require("http");
 
 
 //import & configure dotenv
 require('dotenv').config();
 
+
 var indexRouter = require('./routes/index');
 
 var app = express();
-const server = http.createServer(app)
-// const io = socketio(server);
-const io = new Server({
+const httpServer = createServer(app);
+const io = new Server(httpServer,{
     cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"],
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
     }
 });
-io.listen(4000);
+// const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
+// const io = require('socket.io')(server);
+// const io = require('socket.io')(http.createServer(app));
+// const io = socketio(server);
+// const io = new Server({
+//     cors: {
+//       origin: "http://localhost:3000",
+//       methods: ["GET", "POST"],
+//     }
+// });
+// io.listen(4000);
 
 // Set up mongoose connection
 const mongoose = require("mongoose");
@@ -50,9 +61,6 @@ io.on("connection", socket => {
 
         //Broadcast when new user joins
         socket.broadcast.emit("message", `${username} has joined the chat`);
-
-
-
     })
 
     //User sends message
@@ -72,6 +80,10 @@ io.on("connection", socket => {
     })
 })
 
+io.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+});
+
 
 
 
@@ -86,11 +98,11 @@ app.use(errorHandler);
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
 app.use('/', indexRouter);
 
 
 // app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
-io.listen(8000);
+// io.listen(8000);
+httpServer.listen(8080);
 
 module.exports = app;
