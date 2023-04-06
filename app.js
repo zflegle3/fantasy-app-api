@@ -27,6 +27,8 @@ const io = new Server(httpServer, {
         origin: '*',
     }
 });
+
+
 // const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
 // const io = require('socket.io')(server);
 // const io = require('socket.io')(http.createServer(app));
@@ -110,6 +112,6 @@ app.use((req, res, next) => {
 
 // app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
 // io.listen(8000);
-httpServer.listen(process.env.PORT || 8080);
+// httpServer.listen(process.env.PORT);
 
 module.exports = app;
