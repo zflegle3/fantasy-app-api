@@ -24,7 +24,7 @@ var app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "https://zflegle3.github.io/fantasy-golf-app/",
+        origin: '*',
     }
 });
 // const server = app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))
