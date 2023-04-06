@@ -2,13 +2,13 @@
   "name": "fantasy-golf",
   "version": "0.0.0",
   "private": true,
-  "homepage": "https://zflegle3.github.io/masters-fantasy",
   "scripts": {
     "start": "node ./bin/www",
-    "build": "react-scripts build",
-    "devstart": "nodemon ./bin/www",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "devstart": "nodemon ./bin/www"
+  },
+  "engines": {
+    "node": "18.15.0",
+    "npm": "9.6.4"
   },
   "dependencies": {
     "async": "^3.2.4",
@@ -35,6 +35,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "gh-pages": "^5.0.0",
     "nodemon": "^2.0.22"
   }
 }
