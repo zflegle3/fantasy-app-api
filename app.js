@@ -21,6 +21,7 @@ require('dotenv').config();
 var indexRouter = require('./routes/index');
 
 var app = express();
+app.use(cors());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
@@ -91,7 +92,7 @@ io.on("connect_error", (err) => {
 // view engine setup 
 // app.set("views", path.join(__dirname, "views"));
 // app.set("view engine", "pug");
-app.use(cors());
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
