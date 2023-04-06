@@ -9,6 +9,9 @@ const PlayerSchema = new Schema({
     tourneyStatus: { type: Boolean, default: false},
     world: {type: Object},
     fedex: {type: Object},
+    leaderboard: {type: Object},
+}, {
+  timestamps: true,
 });
 
 // Virtual for player's full name

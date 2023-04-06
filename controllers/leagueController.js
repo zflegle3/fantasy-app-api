@@ -9,6 +9,8 @@ const { populatePlayers, populateTeams, populateChat } = require("../middleware/
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
 
+const { updateScores } = require("../features/data")
+
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"})
@@ -114,14 +116,20 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
     const {_id} = req.body;
     const league = await League.findOne({_id: _id})
     // let managerlist = league.managers;
-    if (league.managers.includes(req.user._id)) {
-        res.send(league);
+
+    //Update team scores
+    const updatedTeams = await updateScores(league.teams, league.settings);
+    const update = {teams: updatedTeams}
+    const updatedLeague = await League.findByIdAndUpdate(_id, update, {new: true});
+
+
+    if (updatedLeague.managers.includes(req.user._id)) {
+        res.send(updatedLeague);
         res.status(200);
     } else {
         res.json({error: "Invalid user credentials, user is not a member of the selected league"});
         res.status(400);
     }
-
     // res.send(league);
 });
 

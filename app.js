@@ -12,8 +12,10 @@ const msg_controller = require("./controllers/messageController");
 const corsOptions = {
   origin: "*"
 }
+const cron = require('node-cron');
 //import & configure dotenv
 require('dotenv').config();
+const { autoUpdateLeaderboard } = require("./features/data")
 
 //Socket.io & messaging dependencies
 // const http = require("http");
@@ -107,6 +109,13 @@ app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
     next();
+});
+
+cron.schedule('*/5 * * * *', async () => {
+// cron.schedule('1 */6 * * *', async () => {
+    //scheduled for 1 min past every 6th hr;
+    console.log("Calling scheduled function at:",new Date());
+    // autoUpdateLeaderboard(process.env.ADMIN_PASSWORD);
 });
 
 

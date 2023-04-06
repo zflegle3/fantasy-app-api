@@ -12,9 +12,10 @@ const populateTeams = async (teamQty, playerQty, adminId, adminUsername) => {
     let roster = []
     for (let j=0; j<playerQty; j++) {
         roster.push({
-            _id: 0,
+            _id: "none",
             first_name: "Player",
-            family_name: j+1
+            family_name: `McPlayerface`,
+            score: null,
         })
     }
     //takes in number and returns qty # of teams

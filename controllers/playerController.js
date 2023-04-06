@@ -154,7 +154,10 @@ exports.player_update_world_ranks_all = async (req, res) => {
             },
             fedex: {
                 standing: null
-            }
+            },
+            leaderboard: {
+                pos: null,
+            },
         })
         if (playerCreated) {
             playersAdded += 1;
@@ -272,6 +275,9 @@ exports.player_update_fedex_all = async (req, res) => {
             world: {
                 rank: null,
             },
+            leaderboard: {
+                pos: null,
+            },
         })
         if (playerCreated) {
             playersAdded += 1;
@@ -298,22 +304,112 @@ exports.player_update_leaderboard_all = async (req, res) => {
 
     //Pull Golf World Rankings Data
     result = await updatePlayerLeaderboard();
-    // { EX RESULT:
-    //     "first_name": "Jon",
-    //     "family_name": "Rahm",
-    //     "country": "esp",
-    //     "standing": "1",
-    //     "points": "2031",
-    //     "wins": "2031",
-    //     "top10": "3",
-    //     "top25": "6",
-    //     "scoreAvg": "9",
-    //     "strokes": "68.0",
-    //     "rounds": "1973"
+    // { EX RESULT
+    //     "first_name": "Scott",
+    //     "family_name": "Stallings",
+    //     "country": "United States",
+    //     "pos": "T1",
+    //     "toPar": "-1",
+    //     "thru": "6",
+    //     "today": "-1",
+    //     "rOne": "-",
+    //     "rTwo": "11:18 AM",
+    //     "rThree": "-",
+    //     "rFour": "-",
+    //     "total": "-"
     // },
 
+    //find all Player docs in db
+    const golfersDb = await Player.find({});
+    // Splice out any players ins leaderboard results but not in db
+    //Shouldn't be necessary but just in case
+    const newPlayers = [...result].filter(function (newData) {
+        return !golfersDb.some(function (currPlayer) {
+            return newData.first_name === currPlayer.first_name && newData.family_name === currPlayer.family_name ; // return the ones with equal id
+        });
+    });
+    console.log(newPlayers);
+    //FOR PLAYERS IN DB
+    for (let i=0; i< golfersDb.length; i++) {
+        //SELECT DB PLAYER AND FIND IF IN TOP 200
+        let playerSelected = golfersDb[i];
+        let golferData = result.filter((lbData) => (lbData.first_name === playerSelected.first_name) && (lbData.family_name === playerSelected.family_name));
+        //Update player document 
+        const filter = { first_name: playerSelected.first_name, family_name: playerSelected.family_name};
+        let update = {
+            country: null,
+            leaderboard: {
+                pos: null,
+            }
+        };
+
+        //Players in DB and Top 200
+        if (golferData.length > 0) {
+            // console.log(golferData)
+            update = {
+                country: golferData[0].country,
+                leaderboard: {
+                    pos: golferData[0].pos,
+                    toPar: golferData[0].toPar,
+                    thru: golferData[0].thru,
+                    today: golferData[0].today,
+                    today: golferData[0].today,
+                    rOne: golferData[0].rOne,
+                    rTwo: golferData[0].rTwo,
+                    rThree: golferData[0].rThree,
+                    total: golferData[0].total,
+                }
+            }
+        }
+        let updatedPlayer = await Player.findOneAndUpdate(filter, update);
+        //update report stats
+        if (updatedPlayer) {
+            playersUpdated += 1;
+        } else {
+            playersError.push(`Update Document Error: ${playerSelected.first_name, playerSelected.family_name}`)
+        }
+    }
+
+    //FOR PLAYERS NOT IN DB ALREADY
+    for (let j=0; j< newPlayers.length; j++) {
+        //add new document to db with fedex data
+        //add a qualified designation as false
+        const playerCreated = await Player.create({
+            first_name: newPlayers[j].first_name,
+            family_name: newPlayers[j].family_name,
+            tourneyStatus: false,
+            country: newPlayers[j].country,
+            fedex: {
+                standing: null,
+            },
+            world: {
+                rank: null,
+            },
+            leaderboard: {
+                pos: newPlayers[j].pos,
+                toPar: newPlayers[j].toPar,
+                thru: newPlayers[j].thru,
+                today: newPlayers[j].today,
+                today: newPlayers[j].today,
+                rOne: newPlayers[j].rOne,
+                rTwo: newPlayers[j].rTwo,
+                rThree: newPlayers[j].rThree,
+                total: newPlayers[j].total,
+            },
+        })
+        if (playerCreated) {
+            playersAdded += 1;
+        } else {
+            playersError.push(`Add Document Error: ${playerSelected.first_name, playerSelected.family_name}`)
+        }
+    }
+
     res.status(200)
-    res.send(result);
+    res.send({
+        playersUpdated: playersUpdated, 
+        playersAdded: playersAdded,
+        errors: playersError,
+    });
 };
 
 

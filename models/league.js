@@ -12,7 +12,7 @@ const Schema = mongoose.Schema;
 const LeagueSchema = new Schema({
   name: { type: String, required: true },
   admin: { type: Schema.Types.ObjectId, ref: "User" },
-  settings: {type: Map, required: true}, 
+  settings: {type: Schema.Types.Mixed, required: true}, 
   managers: [], //array of user ids
   teams: [], //array of team models
   activity: { type : Array , "default" : [] },
