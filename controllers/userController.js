@@ -197,7 +197,7 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
         }
         //create one time link valid for XX min
         let resetToken = generateResetToken(payload,userSecret);
-        const link = `http://localhost:3000/#/reset/${user.email}/${user._id}/${resetToken}`
+        const link = `https://zflegle3.github.io/fantasy-golf-app/#/reset/${user.email}/${user._id}/${resetToken}`
         //send email to user
         var transporter = nodemailer.createTransport({
             service: 'gmail',
