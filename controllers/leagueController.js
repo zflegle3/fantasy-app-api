@@ -135,7 +135,7 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
 
 // Handle league data update on POST.
 exports.league_update_settings = async (req, res) => {
-    const {id, adminId, name, teamCount, rosterSize, rosterCut, missCutScore} = req.body;
+    const {id, adminId, adminUsername, name, teamCount, rosterSize, rosterCut, missCutScore} = req.body;
     //comfirm league id
     let leagueCheck = await League.findOne({_id: id});
     if (!leagueCheck) {
@@ -154,7 +154,7 @@ exports.league_update_settings = async (req, res) => {
     update.settings.missCutScore = missCutScore;
     //update teams if roster size or team qty change
     if (teamCount != leagueCheck.settings.teamCount || rosterSize != leagueCheck.settings.rosterSize) {
-        const teamsAll = await populateTeams(teamCount, rosterSize, adminId);
+        const teamsAll = await populateTeams(teamCount, rosterSize, adminId, adminUsername);
         update.teams= teamsAll;
         update.managers= [adminId];
     };
