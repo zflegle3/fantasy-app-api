@@ -111,12 +111,12 @@ app.use(function(req, res, next) {
     next();
 });
 
-cron.schedule('*/5 * * * *', async () => {
-// cron.schedule('1 */6 * * *', async () => {
-    //scheduled for 1 min past every 6th hr;
-    console.log("Calling scheduled function at:",new Date());
-    // autoUpdateLeaderboard(process.env.ADMIN_PASSWORD);
-});
+// cron.schedule('*/5 * * * *', async () => {
+// // cron.schedule('1 */6 * * *', async () => {
+//     //scheduled for 1 min past every 6th hr;
+//     console.log("Calling scheduled function at:",new Date());
+//     autoUpdateLeaderboard(process.env.ADMIN_PASSWORD);
+// });
 
 
 // app.listen(process.env.PORT, () => console.log(`server is running on PORT:${process.env.PORT}`))

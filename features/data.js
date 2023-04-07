@@ -155,38 +155,102 @@ const updatePlayerLeaderboard = async () => {
     const $ = cheerio.load(html);
     const leaderboard = []
     const table = $('#TableGolfLeaderboard').find('tbody');
-    $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
-        const pos = $(this).find("td:nth-child(2)").text().trim();
-        const country = $(this).find("td:nth-child(3)").find("img").attr("title");
-        const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
-        const toPar = $(this).find("td:nth-child(5)").text().trim();
-        const thru = $(this).find("td:nth-child(6)").text().trim();
-        const today = $(this).find("td:nth-child(7)").text().trim();
-        const rOne = $(this).find("td:nth-child(8)").text().trim();
-        const rTwo = $(this).find("td:nth-child(9)").text().trim();
-        const rThree = $(this).find("td:nth-child(10)").text().trim();
-        const rFour = $(this).find("td:nth-child(11)").text().trim();
-        const total = $(this).find("td:nth-child(12)").text().trim();
 
-        if (name && pos) {
-            leaderboard.push({
-                first_name: name[0],
-                family_name: name.slice(1).join(" "),
-                country: country,
-                pos: pos,
-                toPar: toPar,
-                thru: thru,
-                today: today,
-                rOne: rOne, 
-                rTwo: rTwo,
-                rThree: rThree,
-                rFour: rFour,
-                total, total,
-            })
-        }
-    });
+    const status = $(".Page-content").find("#hudRound").attr("data-roundstatus");
+    // const status = $(".Page-content").find(".GolfLeaderboard-roundStatus").text();
+    console.log("status:",status);
+    if (status === "Complete") {
+        console.log("Round is complete")
+        //if round is complete
+        $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
+            const pos = $(this).find("td:nth-child(2)").text().trim();
+            const country = $(this).find("td:nth-child(3)").find("img").attr("title");
+            const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
+            const toPar = $(this).find("td:nth-child(5)").text().trim();
+            const thru = "-"
+            const today = "-"
+            const rOne = $(this).find("td:nth-child(6)").text().trim();
+            const rTwo = $(this).find("td:nth-child(7)").text().trim();
+            const rThree = $(this).find("td:nth-child(8)").text().trim();
+            const rFour = $(this).find("td:nth-child(9)").text().trim();
+            const total = $(this).find("td:nth-child(10)").text().trim();
+            //value for sorting leaderboards
+            let sortTotal = $(this).find("td:nth-child(5)").text().trim();
+            if (sortTotal === "E") {
+                sortTotal = 0;
+            };
+            if (sortTotal === "-") {
+                sortTotal = 999;
+            };
+            if (name && pos) {
+                leaderboard.push({
+                    first_name: name[0],
+                    family_name: name.slice(1).join(" "),
+                    country: country,
+                    pos: pos,
+                    toPar: toPar,
+                    thru: thru,
+                    today: today,
+                    rOne: rOne, 
+                    rTwo: rTwo,
+                    rThree: rThree,
+                    rFour: rFour,
+                    total, total,
+                    sortTotal, sortTotal,
+                })
+            }
+        });
+
+    } else if (status === "In Progress") {
+        console.log("Round is in progress")
+        //if round is active
+        $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
+            const pos = $(this).find("td:nth-child(2)").text().trim();
+            const country = $(this).find("td:nth-child(3)").find("img").attr("title");
+            const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
+            const toPar = $(this).find("td:nth-child(5)").text().trim();
+            const thru = $(this).find("td:nth-child(6)").text().trim();
+            const today = $(this).find("td:nth-child(7)").text().trim();
+            const rOne = $(this).find("td:nth-child(8)").text().trim();
+            const rTwo = $(this).find("td:nth-child(9)").text().trim();
+            const rThree = $(this).find("td:nth-child(10)").text().trim();
+            const rFour = $(this).find("td:nth-child(11)").text().trim();
+            const total = $(this).find("td:nth-child(12)").text().trim();
+            //value for sorting leaderboards
+            let sortTotal = $(this).find("td:nth-child(5)").text().trim();
+            if (sortTotal === "E") {
+                sortTotal = 0;
+            };
+            if (sortTotal === "-") {
+                sortTotal = 999;
+            };
+
+            if (name && pos) {
+                leaderboard.push({
+                    first_name: name[0],
+                    family_name: name.slice(1).join(" "),
+                    country: country,
+                    pos: pos,
+                    toPar: toPar,
+                    thru: thru,
+                    today: today,
+                    rOne: rOne, 
+                    rTwo: rTwo,
+                    rThree: rThree,
+                    rFour: rFour,
+                    total, total,
+                    sortTotal, sortTotal,
+                })
+            }
+        });
+    } else {
+        //returning null does not update db with new data
+        leaderboard = null;
+    }
     return leaderboard;
 }
+
+
 
 const sendUpdate = async (updateType, message, data) => {
     //send status email on on update
@@ -272,7 +336,9 @@ const autoUpdateLeaderboard = async (password) => {
                         rOne: golferData[0].rOne,
                         rTwo: golferData[0].rTwo,
                         rThree: golferData[0].rThree,
+                        rFour: golferData[0].rFour,
                         total: golferData[0].total,
+                        sortTotal: golferData[0].sortTotal,
                     }
                 }
             }
@@ -309,7 +375,9 @@ const autoUpdateLeaderboard = async (password) => {
                     rOne: newPlayers[j].rOne,
                     rTwo: newPlayers[j].rTwo,
                     rThree: newPlayers[j].rThree,
+                    rFour: newPlayers[j].rFour,
                     total: newPlayers[j].total,
+                    sortTotal: newPlayers[j].sortTotal,
                 },
             })
             if (playerCreated) {
@@ -351,9 +419,8 @@ const updateScores = async(teams, settings) => {
         let totals = [];
         for (let j=0; j< teams[i].roster.length; j++) {
             // const filter = { first_name: teams[i].roster[j].first_name, family_name: teams[i].roster[j].family_name};
-            console.log(teams[i].roster[j]._id);
             if (teams[i].roster[j]._id === "none") {
-                tempTeams[i].roster[j].score = null;
+                tempTeams[i].roster[j].score = {sortTotal: 0};
                 totals.push(0);
             } else {
                 const foundPlayer = await Player.find({_id: teams[i].roster[j]._id});
@@ -379,25 +446,19 @@ const updateScores = async(teams, settings) => {
         totals.sort(function(a, b) {
             return a - b;
         });
-        //concat out array
+        console.log(totals);
+        //concat array based on league cut settings
         let topTotals = [] 
-        console.log(settings.teamCount, settings.rosterCut);
         if (Number(settings.rosterCut) > 0) {
-            console.log("cut array")
-            topTotals = totals.slice(0,(settings.teamCount - settings.rosterCut));
+            topTotals = totals.slice(0,(settings.rosterSize - settings.rosterCut));
         };
         console.log(topTotals);
-        let teamTotal = totals.reduce(add, 0);
+        let teamTotal = topTotals.reduce(add, 0);
         tempTeams[i].total = teamTotal;
     }
-
     //return updated team array
     return tempTeams
 }
-// "teamCount": 4,
-// "missCutScore": "avg",
-// "rosterCut": 1,
-// "rosterSize": 4,
 
 
 
