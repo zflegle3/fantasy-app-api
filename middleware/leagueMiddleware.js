@@ -15,7 +15,7 @@ const populateTeams = async (teamQty, playerQty, adminId, adminUsername) => {
             _id: "none",
             first_name: "Player",
             family_name: `McPlayerface`,
-            score: null,
+            score: {sortTotal: 0},
         })
     }
     //takes in number and returns qty # of teams
