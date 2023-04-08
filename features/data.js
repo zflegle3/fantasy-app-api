@@ -167,9 +167,9 @@ const updatePlayerLeaderboard = async () => {
             const pos = $(this).find("td:nth-child(2)").text().trim();
             const country = $(this).find("td:nth-child(3)").find("img").attr("title");
             const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
-            const toPar = $(this).find("td:nth-child(5)").text().trim();
-            const thru = "-";
-            const today = "-";
+            let toPar = $(this).find("td:nth-child(5)").text().trim();
+            let thru = "-";
+            let today = "-";
             const rOne = $(this).find("td:nth-child(6)").text().trim();
             const rTwo = $(this).find("td:nth-child(7)").text().trim();
             const rThree = $(this).find("td:nth-child(8)").text().trim();
@@ -218,9 +218,9 @@ const updatePlayerLeaderboard = async () => {
             const pos = $(this).find("td:nth-child(2)").text().trim();
             const country = $(this).find("td:nth-child(3)").find("img").attr("title");
             const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
-            const toPar = $(this).find("td:nth-child(5)").text().trim();
-            const thru = $(this).find("td:nth-child(6)").text().trim();
-            const today = $(this).find("td:nth-child(7)").text().trim();
+            let toPar = $(this).find("td:nth-child(5)").text().trim();
+            let thru = $(this).find("td:nth-child(6)").text().trim();
+            let today = $(this).find("td:nth-child(7)").text().trim();
             const rOne = $(this).find("td:nth-child(8)").text().trim();
             const rTwo = $(this).find("td:nth-child(9)").text().trim();
             const rThree = $(this).find("td:nth-child(10)").text().trim();
@@ -447,11 +447,11 @@ const updateScores = async(teams, settings) => {
                 let playerTotal = foundPlayer[0].leaderboard.toPar;
                 if (playerTotal === "E" || playerTotal === "-") {
                     totals.push(0);
-                } else if (playerTotal = "WD") {
+                } else if (playerTotal === "WD") {
                     //Temporarily using 999 to filter out WD player scores
                     //Will need to handle case if a WD player makes the starting roster on a user's team
                     totals.push(999);
-                }else {
+                } else {
                     let opp = playerTotal.slice(0,1);
                     let value = playerTotal.slice(1);
                     if (opp === "+"){
