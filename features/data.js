@@ -468,8 +468,8 @@ const updateScores = async(teams, settings) => {
                 } else if (playerTotal === "CUT") {
                     //Temporarily using 999 to filter out WD player scores
                     //Will need to handle case if a WD player makes the starting roster on a user's team
-                    playerROne = Number(foundPlayer[0].rOne) -72;
-                    playerRTwo = Number(foundPlayer[0].rTwo) -72;
+                    playerROne = Number(foundPlayer[0].leaderboard.rOne) -72;
+                    playerRTwo = Number(foundPlayer[0].leaderboard.rTwo) -72;
                     //Using average of first two rounds for score
                     playerRThree = (playerROne + playerRTwo)/2;
                     //Add round 4 conditional 
