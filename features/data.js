@@ -157,6 +157,7 @@ const updatePlayerLeaderboard = async () => {
     const table = $('#TableGolfLeaderboard').find('tbody');
 
     const status = $(".Page-content").find("#hudRound").attr("data-roundstatus");
+    console.log(status);
     // const status = $(".Page-content").find(".GolfLeaderboard-roundStatus").text();
     console.log("status:",status);
     if (status === "Complete") {
@@ -167,8 +168,8 @@ const updatePlayerLeaderboard = async () => {
             const country = $(this).find("td:nth-child(3)").find("img").attr("title");
             const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
             const toPar = $(this).find("td:nth-child(5)").text().trim();
-            const thru = "-"
-            const today = "-"
+            const thru = "-";
+            const today = "-";
             const rOne = $(this).find("td:nth-child(6)").text().trim();
             const rTwo = $(this).find("td:nth-child(7)").text().trim();
             const rThree = $(this).find("td:nth-child(8)").text().trim();
@@ -182,6 +183,15 @@ const updatePlayerLeaderboard = async () => {
             if (sortTotal === "-") {
                 sortTotal = 999;
             };
+            //Handle WD Cases
+            if (pos === "WD") {
+                sortTotal = 999;
+                toPar = "WD"
+                today = "N/A"
+                thru = "F"
+            };
+
+
             if (name && pos) {
                 leaderboard.push({
                     first_name: name[0],
@@ -223,6 +233,13 @@ const updatePlayerLeaderboard = async () => {
             };
             if (sortTotal === "-") {
                 sortTotal = 999;
+            };
+            //Handle WD Cases
+            if (pos === "WD") {
+                sortTotal = 999;
+                toPar = "WD"
+                today = "N/A"
+                thru = "F"
             };
 
             if (name && pos) {
@@ -424,12 +441,17 @@ const updateScores = async(teams, settings) => {
                 totals.push(0);
             } else {
                 const foundPlayer = await Player.find({_id: teams[i].roster[j]._id});
+                //adds player score to new team copy to be pushed to db 
                 tempTeams[i].roster[j].score = foundPlayer[0].leaderboard;
                 //Update total score
                 let playerTotal = foundPlayer[0].leaderboard.toPar;
                 if (playerTotal === "E" || playerTotal === "-") {
                     totals.push(0);
-                } else {
+                } else if (playerTotal = "WD") {
+                    //Temporarily using 999 to filter out WD player scores
+                    //Will need to handle case if a WD player makes the starting roster on a user's team
+                    totals.push(999);
+                }else {
                     let opp = playerTotal.slice(0,1);
                     let value = playerTotal.slice(1);
                     if (opp === "+"){
@@ -442,7 +464,7 @@ const updateScores = async(teams, settings) => {
                 }
             }
         }
-            //calculate total team score w/ league settings
+        //calculate total team score w/ league settings
         totals.sort(function(a, b) {
             return a - b;
         });
