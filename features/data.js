@@ -190,6 +190,13 @@ const updatePlayerLeaderboard = async () => {
                 today = "N/A"
                 thru = "F"
             };
+            //Handle Missed cut scores
+            if (pos === "CUT") {
+                sortTotal = 999;
+                toPar = "CUT"
+                today = "N/A"
+                thru = "CUT"
+            }
 
 
             if (name && pos) {
@@ -241,6 +248,13 @@ const updatePlayerLeaderboard = async () => {
                 today = "N/A"
                 thru = "F"
             };
+            //Handle Missed cut scores
+            if (pos === "CUT") {
+                sortTotal = 999;
+                toPar = "CUT"
+                today = "N/A"
+                thru = "CUT"
+            }
 
             if (name && pos) {
                 leaderboard.push({
@@ -451,7 +465,17 @@ const updateScores = async(teams, settings) => {
                     //Temporarily using 999 to filter out WD player scores
                     //Will need to handle case if a WD player makes the starting roster on a user's team
                     totals.push(999);
-                } else {
+                } else if (playerTotal === "CUT") {
+                    //Temporarily using 999 to filter out WD player scores
+                    //Will need to handle case if a WD player makes the starting roster on a user's team
+                    let tempPlayerTotal = 0;
+                    playerROne = Number(foundPlayer[0].rd1) -72;
+                    playerRTwo = Number(foundPlayer[0].rd2) -72;
+                    //Using average of first two rounds for score
+                    playerRThree = (playerROne + playerRTwo)/2;
+                    playerRFour = (playerROne + playerRTwo)/2;
+                    totals.push(playerROne+playerRTwo+playerRThree+playerRFour);
+                }else {
                     let opp = playerTotal.slice(0,1);
                     let value = playerTotal.slice(1);
                     if (opp === "+"){
