@@ -153,15 +153,72 @@ const updatePlayerLeaderboard = async () => {
     });
     const html = response.data;
     const $ = cheerio.load(html);
-    const leaderboard = []
+    let leaderboard = []
     const table = $('#TableGolfLeaderboard').find('tbody');
 
     const status = $(".Page-content").find("#hudRound").attr("data-roundstatus");
+    const round = $(".Page-content").find("#hudRound").attr("data-roundnumber");
     console.log(status);
     // const status = $(".Page-content").find(".GolfLeaderboard-roundStatus").text();
     console.log("status:",status);
-    if (status === "Complete") {
-        console.log("Round is complete")
+    if (status === "Complete" && Number(round) === 4) {
+        console.log("Round", round," is", status);
+        //tourney is final
+        $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
+            const pos = $(this).find("td:nth-child(2)").text().trim();
+            const country = $(this).find("td:nth-child(3)").find("img").attr("title");
+            const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
+            let toPar = $(this).find("td:nth-child(5)").text().trim();
+            let thru = "F";
+            let today = "-";
+            const rOne = $(this).find("td:nth-child(7)").text().trim();
+            const rTwo = $(this).find("td:nth-child(8)").text().trim();
+            const rThree = $(this).find("td:nth-child(9)").text().trim();
+            const rFour = $(this).find("td:nth-child(10)").text().trim();
+            const total = $(this).find("td:nth-child(11)").text().trim();
+            //value for sorting leaderboards
+            let sortTotal = $(this).find("td:nth-child(5)").text().trim();
+            if (sortTotal === "E") {
+                sortTotal = 0;
+            };
+            if (sortTotal === "-") {
+                sortTotal = 999;
+            };
+            //Handle WD Cases
+            if (pos === "WD") {
+                sortTotal = 999;
+                toPar = "WD"
+                today = "N/A"
+                thru = "F"
+            };
+            //Handle Missed cut scores
+            if (pos === "CUT") {
+                sortTotal = 999;
+                toPar = "CUT"
+                today = "N/A"
+                thru = "CUT"
+            }
+
+            if (name && pos) {
+                leaderboard.push({
+                    first_name: name[0],
+                    family_name: name.slice(1).join(" "),
+                    country: country,
+                    pos: pos,
+                    toPar: toPar,
+                    thru: thru,
+                    today: today,
+                    rOne: rOne, 
+                    rTwo: rTwo,
+                    rThree: rThree,
+                    rFour: rFour,
+                    total, total,
+                    sortTotal, sortTotal,
+                })
+            }
+        });
+    } else if (status === "Complete" && Number(round) < 4) {
+        console.log("Round is", status);
         //if round is complete
         $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
             const pos = $(this).find("td:nth-child(2)").text().trim();
@@ -218,8 +275,8 @@ const updatePlayerLeaderboard = async () => {
             }
         });
 
-    } else if (status === "In Progress") {
-        console.log("Round is in progress")
+    } else if (status === "In Progress" || status === "Suspended") {
+        console.log("Round is", status);
         //if round is active
         $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
             const pos = $(this).find("td:nth-child(2)").text().trim();
@@ -274,7 +331,64 @@ const updatePlayerLeaderboard = async () => {
                 })
             }
         });
-    } else {
+    } else if (status === "Final") {
+        console.log("Round is", status);
+        //tourney is final
+        $(table).find("tr.GolfLeaderboard-bodyTr").each(async function() {
+            const pos = $(this).find("td:nth-child(2)").text().trim();
+            const country = $(this).find("td:nth-child(3)").find("img").attr("title");
+            const name = $(this).find("td:nth-child(4)").find(".CellPlayerName--long").find("a").text().split(" ");
+            let toPar = $(this).find("td:nth-child(5)").text().trim();
+            let thru = "F";
+            let today = "-";
+            const rOne = $(this).find("td:nth-child(7)").text().trim();
+            const rTwo = $(this).find("td:nth-child(8)").text().trim();
+            const rThree = $(this).find("td:nth-child(9)").text().trim();
+            const rFour = $(this).find("td:nth-child(10)").text().trim();
+            const total = $(this).find("td:nth-child(11)").text().trim();
+            //value for sorting leaderboards
+            let sortTotal = $(this).find("td:nth-child(5)").text().trim();
+            if (sortTotal === "E") {
+                sortTotal = 0;
+            };
+            if (sortTotal === "-") {
+                sortTotal = 999;
+            };
+            //Handle WD Cases
+            if (pos === "WD") {
+                sortTotal = 999;
+                toPar = "WD"
+                today = "N/A"
+                thru = "F"
+            };
+            //Handle Missed cut scores
+            if (pos === "CUT") {
+                sortTotal = 999;
+                toPar = "CUT"
+                today = "N/A"
+                thru = "CUT"
+            }
+
+            if (name && pos) {
+                leaderboard.push({
+                    first_name: name[0],
+                    family_name: name.slice(1).join(" "),
+                    country: country,
+                    pos: pos,
+                    toPar: toPar,
+                    thru: thru,
+                    today: today,
+                    rOne: rOne, 
+                    rTwo: rTwo,
+                    rThree: rThree,
+                    rFour: rFour,
+                    total, total,
+                    sortTotal, sortTotal,
+                })
+            }
+        });
+    }
+    else {
         //returning null does not update db with new data
         leaderboard = null;
     }

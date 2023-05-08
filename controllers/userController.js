@@ -8,6 +8,7 @@ const { update } = require("../models/message");
 const mongoose = require('mongoose');
 const db = mongoose.connection;
 const { executeChallenge } = require("../features/data");
+const connection = require("../database/mysql");
 
 //Init GridFs Stream
 let gfs;
@@ -84,39 +85,71 @@ exports.user_login = asyncHandler(async (req, res) => {
     //Check for user by email and username
     const userEmail = await User.findOne({email: emailOrUsername});
     const userUsername = await User.findOne({username: emailOrUsername});
+    //Check for user by email and username
+    emailSql = `SELECT * FROM users WHERE email='${emailOrUsername}'`;
+    usernameSql = `SELECT * FROM users WHERE username='${emailOrUsername}'`;
+    let userFound = null;
+    await connection.query(emailSql, (err, result) => {
+        if(!err & result.length > 0) {
+            console.log(result);
+            userFound = result[0];
+        };
+    });
+    await connection.query(usernameSql, (err, result) => {
+        if(!err & result.length > 0) {
+            console.log(result);
+            userFound = result[0];
+        };
+    });
 
-    if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
-        res.json({
-            _id: userEmail.id,
-            username: userEmail.username,
-            email: userEmail.email,
-            first_name: userEmail.first_name,
-            family_name: userEmail.family_name,
-            favorites: userEmail.favorites,
-            leagues: userEmail.leagues,
-            chats: userEmail.chats,
-            color: userEmail.color,
-            profileImage: userEmail.profileImage,
-            token: generateToken(userEmail._id),
-        });
-    } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
-        res.json({
-            _id: userUsername.id,
-            username: userUsername.username,
-            email: userUsername.email,
-            first_name: userUsername.first_name,
-            family_name: userUsername.family_name,
-            favorites: userUsername.favorites,
-            leagues: userUsername.leagues,
-            chats: userUsername.chats,
-            color: userUsername.color,
-            profileImage: userUsername.profileImage,
-            token: generateToken(userUsername._id),
-        });
+    console.log(userFound);
+    if (userFound) {
+        res.status(200)
+        res.send(userFound);
     } else {
-        res.status(400).json({error: "wrong email pal"}); //change back to 400
-        // throw new Error("Invalid credentials")
+        res.status(400)
+        res.send({user: null});
     }
+    
+
+
+
+
+
+
+
+    // if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
+    //     res.json({
+    //         _id: userEmail.id,
+    //         username: userEmail.username,
+    //         email: userEmail.email,
+    //         first_name: userEmail.first_name,
+    //         family_name: userEmail.family_name,
+    //         favorites: userEmail.favorites,
+    //         leagues: userEmail.leagues,
+    //         chats: userEmail.chats,
+    //         color: userEmail.color,
+    //         profileImage: userEmail.profileImage,
+    //         token: generateToken(userEmail._id),
+    //     });
+    // } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
+    //     res.json({
+    //         _id: userUsername.id,
+    //         username: userUsername.username,
+    //         email: userUsername.email,
+    //         first_name: userUsername.first_name,
+    //         family_name: userUsername.family_name,
+    //         favorites: userUsername.favorites,
+    //         leagues: userUsername.leagues,
+    //         chats: userUsername.chats,
+    //         color: userUsername.color,
+    //         profileImage: userUsername.profileImage,
+    //         token: generateToken(userUsername._id),
+    //     });
+    // } else {
+    //     res.status(400).json({error: "wrong email pal"}); //change back to 400
+    //     // throw new Error("Invalid credentials")
+    // }
 });
 
 // @desc Verify exsiting email for signup/login
@@ -525,8 +558,6 @@ exports.upload_image = asyncHandler(async (req, res) => {
     }
     //Update user and return updated user with new image
     const updatedUser = await User.findByIdAndUpdate(req.params.id, {profileImage: req.file.filename}, { new: true });
-    console.log(req.file.filename);
-    console.log(updatedUser);
     if (!updatedUser) {
         res.status(401)
         throw new Error("User not found");

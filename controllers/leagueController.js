@@ -123,6 +123,7 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
     const updatedLeague = await League.findByIdAndUpdate(_id, update, {new: true});
 
 
+
     if (updatedLeague.managers.includes(req.user._id)) {
         res.send(updatedLeague);
         res.status(200);
@@ -157,8 +158,42 @@ exports.league_update_settings = async (req, res) => {
         const teamsAll = await populateTeams(teamCount, rosterSize, adminId, adminUsername);
         update.teams= teamsAll;
         update.managers= [adminId];
+        //Remove league reference from non Admin managers
+        let managersErase = [...leagueCheck.managers].filter(manager => manager !== adminId)
+        if (managersErase.length > 0) { //Only if managers other than admin exist in league
+            for (let i=0; i< managersErase.length; i++) {
+                let tempManager = await User.findById(managersErase[i]);
+                //filter out league 
+                console.log(id);
+                let newLeagues = tempManager.leagues.filter(leagueCurrent => leagueCurrent.id.toString() !== id)
+                console.log(newLeagues);
+                //update manager with removed league
+                let newManager = await User.findByIdAndUpdate(managersErase[i], {leagues: newLeagues})
+                console.log(newManager)
+            }
+        }
     };
+    //update managers' user docs on league name change
+    if (update.name !== leagueCheck.name) {
+        let managersUpdate = [...leagueCheck.managers]
+        for (let i=0; i < managersUpdate.length; i++) {
+            let tempManager = await User.findById(managersUpdate[i]);
+            //filter out league 
+            let newLeagues = tempManager.leagues.filter(leagueCurrent => leagueCurrent.id.toString() !== id)
+            console.log(newLeagues);
+            newLeagues.push({id: id, name: update.name});
+            let newManager = await User.findByIdAndUpdate(managersUpdate[i], {leagues: newLeagues})
+            console.log(newManager)
+        }
+
+
+    }
+
+
     const updatedLeague = await League.findByIdAndUpdate(id, update, {new: true});
+    
+
+
     if (updatedLeague) {
         res.send(updatedLeague);
         res.status(200);
@@ -225,39 +260,45 @@ exports.league_update_passcode_auto = async (req, res) => {
 
 // Handle league data update on PUT.
 exports.league_join = async (req, res) => {
-    //CHECK PASSCODE TOO
-    //validate if user is already in the league
+    console.log("league join called");
     const {leagueName, managerId, passcode} = req.body;
     console.log(leagueName, managerId, passcode);
+
+
+    //validate league exists and passcode is valid
     let leagueCheck = await League.findOne({name: leagueName, passcode: passcode});
     if (!leagueCheck) {
         res.status(401)
-        res.send({msg: "League credentials not found"})
-        // throw new Error("League credentials not found");
+        return res.send({msg: "League credentials not found"})
     }
 
-    //validate there are enough teams available
+    //validate manager not already in league
     let managerExists = leagueCheck.managers.filter(managerCurrent => managerCurrent === managerId);
-    console.log(managerExists)
+    console.log(managerExists.length);
     if (managerExists.length > 0) {
         res.status(403)
-        res.send({msg: "User already in league"})
+        return res.send({msg: "User already in league"})
     }
-    //verify validation**
+
+    //verify user exists
     let userCheck = await User.findOne({_id: managerId});
     if (!userCheck) {
         res.status(401)
-        res.send({msg: "Manager account not found"})
+        return res.send({msg: "Manager account not found"})
     }
 
+    //verify teams in league are still available
+    //manager id will be null for available teams
     let availableTeams = leagueCheck.teams.filter(team => !team.manager.id)
     if (availableTeams.length < 1) {
         res.status(403)
-        res.send({msg: "No teams available"})
+        return res.send({msg: "No teams available"})
     }
+
     //Add manager Id to managers list
     let managersNew = [...leagueCheck.managers, managerId]
     console.log(managersNew)
+    //chooses first available team to populate with new manager
     let teamIndex = leagueCheck.teams.indexOf(availableTeams[0]);
     let teamsNew = [...leagueCheck.teams]
     teamsNew[teamIndex].manager = {id: managerId, username: userCheck.username};
@@ -266,14 +307,14 @@ exports.league_join = async (req, res) => {
     let updatedLeague = await League.findByIdAndUpdate(leagueCheck._id, {managers: managersNew, teams: teamsNew});
     if (!updatedLeague) {
         res.status(500);
-        res.send("Unable to update League")
+        return res.send("Unable to update League")
     }
     //Update User with new league
     userLeaguesNew = [...userCheck.leagues, {id: leagueCheck._id, name: leagueCheck.name}]
     let updatedUser = await  User.findByIdAndUpdate(managerId, {managers: managersNew, leagues: userLeaguesNew},  {new: true})
     if (!updatedUser) {
         res.status(500);
-        res.send("Unable to update user")
+        return res.send("Unable to update user")
     }
     res.status(200);
     res.json({
