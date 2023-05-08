@@ -34,7 +34,7 @@ const generateResetToken = (user, userSecret) => {
 exports.user_register = asyncHandler(async (req, res) => {
     //create new user data
     const {username, email, password, first_name, family_name } = req.body;
-
+    //confirm login credentials exist
     if (!username || !email || !password) {
         res.status(400);
         res.send({status: "Error: Please add all fields"})
@@ -42,14 +42,12 @@ exports.user_register = asyncHandler(async (req, res) => {
     const userExists = await database.getUserByEmail(email);
     if (userExists) {
         //error bc user exists
-        res.status(400);
+        res.status(401);
         res.send({status: "Error: User already exists", user: null})
     }
-
     //hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(password, salt);
-
     //create user
     const user = await User.create({
         username: username,
@@ -84,81 +82,44 @@ exports.user_register = asyncHandler(async (req, res) => {
 
 // @desc Authenticate user login
 // @route POST /user/login
-// @access Private
+// @access Public
 exports.user_login = asyncHandler(async (req, res) => {
     //read user data from db and send
     const {emailOrUsername, password} = req.body;
     //Check for user by email and username
-    const userEmail = await User.findOne({email: emailOrUsername});
-    const userUsername = await User.findOne({username: emailOrUsername});
-    //Check for user by email and username
-    emailSql = `SELECT * FROM users WHERE email='${emailOrUsername}'`;
-    usernameSql = `SELECT * FROM users WHERE username='${emailOrUsername}'`;
-    let userFound = null;
-    await connection.query(emailSql, (err, result) => {
-        if(!err & result.length > 0) {
-            console.log(result);
-            userFound = result[0];
-        };
-    });
-    await connection.query(usernameSql, (err, result) => {
-        if(!err & result.length > 0) {
-            console.log(result);
-            userFound = result[0];
-        };
-    });
-
-    console.log(userFound);
-    if (userFound) {
-        res.status(200)
-        res.send(userFound);
+    const userEmail = await database.getUserByEmail(emailOrUsername);
+    const userUsername = await database.getUserByUsername(emailOrUsername);
+    if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
+        res.json({
+            user: {
+                id: userEmail.id,
+                username: userEmail.username,
+                email: userEmail.email,
+                first_name: userEmail.first_name,
+                last_name: userEmail.last_name,
+                token: generateToken(userEmail.id)
+            },
+            status: "user found"
+        });
+    } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
+        res.json({
+            user: {
+                id: userUsername.id,
+                username: userUsername.username,
+                email: userUsername.email,
+                first_name: userUsername.first_name,
+                last_name: userUsername.last_name,
+                token: generateToken(userUsername.id),
+            },
+            status: "user found"
+        });
     } else {
-        res.status(400)
-        res.send({user: null});
+        res.status(401).json({user: null, status: "Error: wrong login credentials pal"});
     }
-    
-
-
-
-
-
-
-
-    // if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
-    //     res.json({
-    //         _id: userEmail.id,
-    //         username: userEmail.username,
-    //         email: userEmail.email,
-    //         first_name: userEmail.first_name,
-    //         family_name: userEmail.family_name,
-    //         favorites: userEmail.favorites,
-    //         leagues: userEmail.leagues,
-    //         chats: userEmail.chats,
-    //         color: userEmail.color,
-    //         profileImage: userEmail.profileImage,
-    //         token: generateToken(userEmail._id),
-    //     });
-    // } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
-    //     res.json({
-    //         _id: userUsername.id,
-    //         username: userUsername.username,
-    //         email: userUsername.email,
-    //         first_name: userUsername.first_name,
-    //         family_name: userUsername.family_name,
-    //         favorites: userUsername.favorites,
-    //         leagues: userUsername.leagues,
-    //         chats: userUsername.chats,
-    //         color: userUsername.color,
-    //         profileImage: userUsername.profileImage,
-    //         token: generateToken(userUsername._id),
-    //     });
-    // } else {
-    //     res.status(400).json({error: "wrong email pal"}); //change back to 400
-    //     // throw new Error("Invalid credentials")
-    // }
 });
 
-// @desc Verify exsiting email for signup/login
+
+// @desc Verify exisiting email for signup/login
 // @route POST /user/read
 // @access Public
 exports.user_read_email = asyncHandler(async (req, res) => {
@@ -166,23 +127,23 @@ exports.user_read_email = asyncHandler(async (req, res) => {
     const {email} = req.body;
     console.log("email", email)
     //Check for user by email
-    const user = await User.findOne({email: email})
+    const user = await database.getUserByEmail(email)
     console.log("email user", user)
     if (user) {
+        res.status(200)
         res.json({
-            _id: user.id,
+            id: user.id,
             username: user.username,
             email: user.email,
         })
     } else {
+        res.status(400)
         res.json({
-            _id: "not valid user",
-            username: "not valid user",
-            email: "not valid user",
+            id: "invalid user",
+            username: "invalid user",
+            email: "invalid user",
         })
     }
-
-    res.status(200).json(req.user)
 });
 
 // @desc Verify exsiting username for signup
@@ -191,24 +152,23 @@ exports.user_read_email = asyncHandler(async (req, res) => {
 exports.user_read_username = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {username} = req.body;
-    console.log(username)
     //Check for user by email
-    const user = await User.findOne({username: username});
-    console.log(user);
+    const user = await database.getUserByUsername(username);
     if (user) {
+        res.status(200)
         res.json({
             _id: user.id,
             username: user.username,
             email: user.email,
         })
     } else {
+        res.status(400)
         res.json({
-            _id: "not valid user",
-            username: "not valid user",
-            email: "not valid user",
+            _id: "invalid user",
+            username: "invalid user",
+            email: "invalid user",
         })
     }
-    res.status(200).json(req.user)
 });
 
 // @desc Delete existing user 
