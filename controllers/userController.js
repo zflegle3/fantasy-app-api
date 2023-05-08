@@ -8,7 +8,9 @@ const { update } = require("../models/message");
 const mongoose = require('mongoose');
 const db = mongoose.connection;
 const { executeChallenge } = require("../features/data");
-const connection = require("../database/mysql");
+const database = require("../database/databaseActions");
+
+
 
 //Init GridFs Stream
 let gfs;
@@ -24,7 +26,9 @@ const generateResetToken = (user, userSecret) => {
     return jwt.sign({user}, userSecret, {expiresIn: "30m"})
 }
 
-// @desc Register new user
+
+
+// @desc Register a new user
 // @route POST /user/create
 // @access Public
 exports.user_register = asyncHandler(async (req, res) => {
@@ -33,15 +37,13 @@ exports.user_register = asyncHandler(async (req, res) => {
 
     if (!username || !email || !password) {
         res.status(400);
-        throw new Error("Please add all fields");
+        res.send({status: "Error: Please add all fields"})
     }
-
-    //check user exists
-    const userExists = await User.findOne({email});
+    const userExists = await database.getUserByEmail(email);
     if (userExists) {
         //error bc user exists
         res.status(400);
-        throw new Error("User already exists");
+        res.send({status: "Error: User already exists", user: null})
     }
 
     //hash password
@@ -58,19 +60,23 @@ exports.user_register = asyncHandler(async (req, res) => {
         leagues: [],
     })
 
-    if (user) {
+    const userNew = await database.createNewUser('First Name', 'Last Name', username, hashedPass, email)
+    let userFound = await database.getUserByUsername(username);
+    if (userFound) {
         res.status(201).json({
-            _id: user.id,
-            username: user.username,
-            email: user.email,
-            first_name: user.first_name,
-            family_name: user.family_name,
-            leagues: user.leagues,
-            token: generateToken(user._id),
+            user: {
+                id: userFound.id,
+                username: userFound.username,
+                email: userFound.email,
+                first_name: userFound.first_name,
+                last_name: userFound.last_name,
+                token: generateToken(user._id),
+            },
+            status: "User created" 
         })
     } else {
         res.status(400)
-        throw new Error("Invalid data, user not created")
+        res.send({status: "Error: User could not be created", user: null})
     }
 });
 
