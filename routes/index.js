@@ -38,10 +38,14 @@ const upload = multer({ storage });
 
 
 
+
+
 /* Homepage Routes */
 router.get('/', function(req, res, next) {
   // res.render('index', { title: 'Express' });
 });
+
+
 
 
 
@@ -108,8 +112,6 @@ router.post("/user/upload/:id/:token",upload.single("profileImage"), user_contro
 //PUBLIC
 router.get("/image/:filename", user_controller.get_image);
 
-
-
 // //POST request to update user data
 // router.put("/user/update/image", user_controller.user_update_post);
 
@@ -118,12 +120,17 @@ router.get("/image/:filename", user_controller.get_image);
 
 
 
+
+
 /* MESSAGE ROUTES */
 // GET request for reading Messages.
 router.get("/messages", message_controller.message_read_list);
 
 // POST request for creating Book.
-router.post("/message/create", message_controller.message_create_post);
+router.post("/messages/create", message_controller.message_create_post);
+
+
+
 
 
 
