@@ -124,7 +124,7 @@ router.get("/image/:filename", user_controller.get_image);
 
 /* MESSAGE ROUTES */
 // GET request for reading Messages.
-router.get("/messages", message_controller.message_read_list);
+router.get("/messages/read/chat", message_controller.message_read_chat);
 
 // POST request for creating Book.
 router.post("/messages/create", message_controller.message_create_post);
@@ -202,20 +202,23 @@ router.put("/player/update/leaderboard", player_controller.player_update_leaderb
 
 
 /* Chat ROUTES */
-// POST request for reading Messages.
-router.post("/chat/create/new", chat_controller.chat_add_new);
+// POST request for creating a new chat
+router.post("/chats/create", chat_controller.chat_create_new);
 
-// POST request for reading Messages.
-// router.post("/chat/create/league", chat_controller.chat_add_new);
+// POST request for deleting 
+router.delete("/chats/delete", chat_controller.chat_delete);
 
-// POST request for reading Messages.
-router.post("/chat/get/id", chat_controller.chat_get_id);
+// POST request for reading chat messages.
+router.get("/chats/get/id", chat_controller.chat_get_id);
 
-// // PUT request for reading Messages.
-// router.get("/chat/update/:id", chat_controller.chat_get_id);
+// POST request for adding members to chats
+router.put("/chats/add/user", chat_controller.chat_add_user);
 
-// // DELETE request for reading Messages.
-// router.get("/chat/delete/:id", chat_controller.chat_get_id);
+// POST request for removing members to chats
+router.put("/chats/remove/user", chat_controller.chat_remove_user);
+
+// POST request for updating chat settings
+router.put("/chats/update", chat_controller.chat_update);
 
 //CHAT ROOM JOINING/LEAVING HANDLED IN SOCKET.IO
 //CHAT MESSAGE  SENDING/RECEIVING HANDLED IN SOCKET.IO

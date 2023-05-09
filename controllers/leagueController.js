@@ -8,13 +8,18 @@ const Team = require("../models/team");
 const { populatePlayers, populateTeams, populateChat } = require("../middleware/leagueMiddleware");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
-
 const { updateScores } = require("../features/data")
+const database = require("../database/databaseActions");
+
+
 
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"})
 }
+
+
+
 
 // @desc Create a new league
 // @route POST /league/create
@@ -23,15 +28,16 @@ exports.league_create_post = asyncHandler(async(req, res) => {
     console.log("called", new Date());
     //protected route so can use req.user for user data
     //get data from body
-    const {adminId, name, settings, activity, year, draft} = req.body;
+    const {chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id} = req.body;
     // const chatId = await populateChat();
     //Check for user
-    let admin = await User.findOne({_id: adminId})
-    if (!admin) {
-        res.status(401)
-        throw new Error("User not found");
+    // let admin = await User.findOne({_id: adminId})
+    let adminCheck = await database.getUserById(admin);
+    if (!adminCheck) {
+        res.status(401).json({league: null, status: "unable to find admin user"})
     } 
-    console.log("found user", new Date());
+    //chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id
+    // console.log("found user", new Date());
     //populate any additional data (teams, freeAgent players)
     const players = await populatePlayers();
     const teamsAll = await populateTeams(settings.teamCount, settings.rosterSize, adminId, admin.username);

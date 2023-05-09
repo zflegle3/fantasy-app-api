@@ -133,14 +133,29 @@ exports.updateUser = (id, first_name, last_name, username, password, email) => {
 //CHAT METHODS
 //CREATE NEW CHAT
 exports.createNewChat = (name) => {
-    let sql = `INSERT INTO chats(name) VALUES ('${name}');`;
+    let sql = `INSERT INTO chats(name) VALUES (?); SELECT LAST_INSERT_ID();`;
     let params = [name];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
+                console.log(error);
                 return resolve(null);
             }
-            return resolve(result[0]);
+            //returns id of created chat
+            return resolve(result[1][0]['LAST_INSERT_ID()']);
+        });
+    });
+}
+
+exports.deleteChat = (id) => {
+    let sql = 'DELETE FROM chats WHERE id = ?;';
+    let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                return resolve(false);
+            }
+            return resolve(true);
         });
     });
 }
@@ -153,9 +168,9 @@ exports.updateChat = (id, name) => {
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
-                return resolve(null);
+                return resolve(false);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }
@@ -175,7 +190,7 @@ exports.getChat = (id) => {
 }
 
 exports.getChatUsers = (id) => {
-    let sql = `SELECT user_id, b.first_name, b.last_name, b.username, chat_id, a.name FROM users b JOIN user_chats ba ON ba.user_id = b.id JOIN chats a ON ba.chat_id = a.id WHERE a.id = ?`;
+    let sql = `SELECT user_id, b.first_name, b.last_name, b.username FROM users b JOIN user_chats ba ON ba.user_id = b.id JOIN chats a ON ba.chat_id = a.id WHERE a.id = ?`;
     let params = [id];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
@@ -196,15 +211,18 @@ exports.getChatUsers = (id) => {
 
 //USER CHAT METHODS
 //ADD USER CHAT
-exports.userAddChat= (chat_id, user_id) =>{
+exports.userAddChat= (chat_id, user_id) => {
     sql = `INSERT INTO user_chats(user_id, chat_id) VALUES (?, ?)`;
-    let params = [chat_id, user_id];
+    let params = [user_id, chat_id,];
+    console.log(sql);
+    console.log(params);
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
+                console.log(error);
                 return resolve(null);
             }
-            return resolve(result);
+            return resolve(true);
         });
     });
 };
@@ -232,7 +250,7 @@ exports.userRemoveChat = (user_id, chat_id) => {
             if(error){
                 return resolve(null);
             }
-            return resolve(result);
+            return resolve(true);
         });
     });
 };

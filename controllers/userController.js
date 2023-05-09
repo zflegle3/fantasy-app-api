@@ -60,6 +60,7 @@ exports.user_register = asyncHandler(async (req, res) => {
 
     const userNew = await database.createNewUser('First Name', 'Last Name', username, hashedPass, email)
     let userFound = await database.getUserByUsername(username);
+    let userChats = await database.getUserChatsByUserId(userFound.id)
     if (userFound) {
         res.status(201).json({
             user: {
@@ -68,6 +69,7 @@ exports.user_register = asyncHandler(async (req, res) => {
                 email: userFound.email,
                 first_name: userFound.first_name,
                 last_name: userFound.last_name,
+                chats: userChats,
                 token: generateToken(user._id),
             },
             status: "User created" 
@@ -90,6 +92,7 @@ exports.user_login = asyncHandler(async (req, res) => {
     const userEmail = await database.getUserByEmail(emailOrUsername);
     const userUsername = await database.getUserByUsername(emailOrUsername);
     if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
+        let userChats = await database.getUserChatsByUserId(userEmail.id)
         res.json({
             user: {
                 id: userEmail.id,
@@ -97,11 +100,13 @@ exports.user_login = asyncHandler(async (req, res) => {
                 email: userEmail.email,
                 first_name: userEmail.first_name,
                 last_name: userEmail.last_name,
+                chats: userChats,
                 token: generateToken(userEmail.id)
             },
             status: "user found"
         });
     } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
+        let userChats = await database.getUserChatsByUserId(userUsername.id)
         res.json({
             user: {
                 id: userUsername.id,
@@ -109,6 +114,7 @@ exports.user_login = asyncHandler(async (req, res) => {
                 email: userUsername.email,
                 first_name: userUsername.first_name,
                 last_name: userUsername.last_name,
+                chats: userChats,
                 token: generateToken(userUsername.id),
             },
             status: "user found"
@@ -359,6 +365,7 @@ exports.user_update_details = asyncHandler(async (req, res) => {
     }
     const updatedUser = await database.updateUser(id, first_name, last_name, username, hashedPassword, email);
     const userFound = await database.getUserById(id);
+    let userChats = await database.getUserChatsByUserId(userFound.id)
     if (updatedUser) {
         res.json({
             user: {
@@ -367,6 +374,7 @@ exports.user_update_details = asyncHandler(async (req, res) => {
                 email: userFound.email,
                 first_name: userFound.first_name,
                 last_name: userFound.last_name,
+                chats: userChats,
                 token: generateToken(userFound.id),
             },
             status: "user updated successfully"
