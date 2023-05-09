@@ -85,6 +85,7 @@ exports.createNewUser = (first_name, last_name, username, password, email) => {
 
 //UPDTE EXISTING USER
 exports.updateUser = (id, first_name, last_name, username, password, email) => {
+    //function
     let vals = '';
     //check variables for null and only update non-null values
     if (first_name) {
@@ -107,9 +108,10 @@ exports.updateUser = (id, first_name, last_name, username, password, email) => {
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
+                console.log(error)
                 return resolve(null);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }
@@ -137,7 +139,6 @@ exports.updateChat = (id, name) => {
             if(error){
                 return resolve(null);
             }
-            console.log(result);
             return resolve(result[0]);
         });
     });
@@ -145,14 +146,12 @@ exports.updateChat = (id, name) => {
 
 exports.getChat = (id) => {
     let sql = `SELECT * FROM chats WHERE id=${id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,(error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);
             }
-            console.log(result);
             return resolve(result[0]);
         });
     });
@@ -160,14 +159,12 @@ exports.getChat = (id) => {
 
 exports.getChatUsers = (id) => {
     let sql = `SELECT user_id, b.first_name, b.last_name, b.username, chat_id, a.name FROM users b JOIN user_chats ba ON ba.user_id = b.id JOIN chats a ON ba.chat_id = a.id WHERE a.id = ${id}`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,(error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);
             }
-            console.log(result);
             return resolve(result);
         });
     });
@@ -226,7 +223,6 @@ exports.userRemoveChat = (user_id, chat_id) => {
 //LEAGUE METHODS
 //CREATE NEW LEAGUE
 exports.createNewLeague = (chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) => {
-    console.log(chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id);
     let sql = `INSERT INTO leagues(chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) VALUES (${chat_id}, '${name}', ${admin}, '${passcode}', ${team_qty}, ${roster_qty}, ${roster_cut}, ${cut_score}, '${ref_id}');`;
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
@@ -234,7 +230,6 @@ exports.createNewLeague = (chat_id, name, admin, passcode, team_qty, roster_qty,
                 console.log(error);
                 return resolve(null);
             }
-            console.log(result[0]);
             return resolve(result[0]);
         });
     });
@@ -242,13 +237,11 @@ exports.createNewLeague = (chat_id, name, admin, passcode, team_qty, roster_qty,
 
 exports.getLeagueByRef = (ref_id) => {
     let sql = `SELECT * FROM leagues WHERE ref_id= '${ref_id}';`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
                 return resolve(null);
             }
-            console.log(result);
             return resolve(result[0]);
         });
     });
@@ -299,7 +292,6 @@ exports.updateLeague = (id, chat_id, name, admin, passcode, team_qty, roster_qty
     }
     vals = vals.trim();
     let sql = `UPDATE leagues SET ${vals.substring(0, vals.length - 1)} WHERE id = ${id}`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -314,14 +306,12 @@ exports.updateLeague = (id, chat_id, name, admin, passcode, team_qty, roster_qty
 
 exports.getUserLeaguesByUserId = (user_id) => {
     let sql = `SELECT user_id, b.username, league_id, a.name FROM users b JOIN user_leagues ba ON ba.user_id = b.id JOIN leagues a ON ba.league_id = a.id WHERE b.id = ${user_id}`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,(error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);
             }
-            console.log(result);
             return resolve(result);
         });
     });
@@ -385,7 +375,6 @@ exports.getMessagesByChatId = (chat_id) => {
 //CREATE NEW ACTIVITY
 exports.createNewActivity = (league_id, user_id, body) => {
     sql = `INSERT INTO activities(league_id, user_id, time, body) VALUES (${league_id}, ${user_id}, now(), '${body}');`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -414,7 +403,6 @@ exports.getActivitiesByLeagueId = (league_id) => {
 //CREATE A NEW TEAM
 exports.createNewTeam = (league_id, name, manager, event_wins, player_wins, avatar) => {
     sql = `INSERT INTO teams(league_id, name, manager, event_wins, player_wins, avatar) VALUES ( ${league_id}, '${name}', ${manager}, ${event_wins}, ${player_wins}, '${avatar}');`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -429,7 +417,6 @@ exports.createNewTeam = (league_id, name, manager, event_wins, player_wins, avat
 
 exports.deleteTeamById = (id) => {
     sql = `DELETE FROM teams WHERE id = ${id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -443,7 +430,6 @@ exports.deleteTeamById = (id) => {
 //GET TEAM BY ID
 exports.getTeamById = (id) => {
     sql = `SELECT * FROM teams WHERE id=${id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -457,7 +443,6 @@ exports.getTeamById = (id) => {
 
 exports.getTeamsByLeagueId = (league_id) => {
     sql = `SELECT * FROM teams WHERE league_id=${league_id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -490,7 +475,6 @@ exports.updateTeam = (id, name, manager, event_wins, player_wins, avatar) => {
     }
     vals = vals.trim();
     let sql = `UPDATE teams SET ${vals.substring(0, vals.length - 1)} WHERE id = ${id}`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -505,7 +489,6 @@ exports.updateTeam = (id, name, manager, event_wins, player_wins, avatar) => {
 
 exports.getPlayersByTeam = (team_id) => {
     sql = `SELECT player_id, b.first_name, b.last_name, team_id, a.name FROM players b JOIN team_players ba ON ba.player_id = b.id JOIN teams a ON ba.team_id = a.id WHERE a.id = ${team_id}`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -519,7 +502,6 @@ exports.getPlayersByTeam = (team_id) => {
 
 exports.addTeamPlayer = (team_id, player_id) => {
     sql = `INSERT INTO team_players(team_id, player_id) VALUES (${team_id}, ${player_id});`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -533,7 +515,6 @@ exports.addTeamPlayer = (team_id, player_id) => {
 
 exports.removeTeamPlayer = (team_id, player_id) => {
     sql = `DELETE FROM team_players WHERE team_id = ${team_id} AND player_id = ${player_id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -549,7 +530,6 @@ exports.removeTeamPlayer = (team_id, player_id) => {
 //CREATE NEW EVENT
 exports.createNewEvent = (name, date_start, date_end, status, location, course, network, defending) => {
     sql = `INSERT INTO events(name, date_start, date_end, status, location, course, network, defending) VALUES ('${name}', TIMESTAMP('${date_start}'), TIMESTAMP('${date_end}'), '${status}', '${location}', '${course}', '${network}', '${defending}');`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -564,7 +544,6 @@ exports.createNewEvent = (name, date_start, date_end, status, location, course, 
 
 exports.getEventsByLeagueId = (league_id) => {
     sql = `SELECT event_id, b.name, b.location, b.course, b.date_start, b.date_end, b.status, b.defending, league_id, a.name FROM events b JOIN league_events ba ON ba.event_id = b.id JOIN leagues a ON ba.league_id = a.id WHERE a.id = ${league_id}`
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -578,8 +557,6 @@ exports.getEventsByLeagueId = (league_id) => {
 
 exports.addLeagueEvent = (league_id, event_id) => {
     sql = `INSERT INTO league_events(league_id, event_id) VALUES (${league_id}, ${event_id})`
-    console.log(sql);
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -593,7 +570,6 @@ exports.addLeagueEvent = (league_id, event_id) => {
 
 exports.removeLeagueEvent = (league_id, event_id) => {
     sql = `DELETE FROM league_events WHERE league_id = ${league_id} AND event_id = ${event_id};`
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -610,7 +586,6 @@ exports.removeLeagueEvent = (league_id, event_id) => {
 //CREATE NEW PLAYER
 exports.createNewPlayer = (first_name, last_name, country) => {
     sql = `INSERT INTO players(first_name, last_name, country, current_event, next_event, world_rank, world_total, world_avg, world_lost, world_gain, world_earn, world_events, fedex_rank, fedex_total, fedex_wins, fedex_top_10, fedex_top_25, fedex_avg, fedex_strokes, fedex_rounds, event_pos, event_to_par, event_thru, event_today, event_r_one, event_r_two, event_r_three, event_r_four, event_total, event_sort_total) VALUES ('${first_name}', '${last_name}', '${country}',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -625,7 +600,6 @@ exports.createNewPlayer = (first_name, last_name, country) => {
 //GET PLAYER BY ID
 exports.getPlayerById = (id) => {
     sql = `SELECT * FROM players WHERE id=${id};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -641,7 +615,6 @@ exports.getPlayerById = (id) => {
 //GET PLAYER BY NAME
 exports.getPlayerByName = (first_name, last_name) => {
     sql = `SELECT * FROM players WHERE first_name = '${first_name}' AND last_name = '${last_name}' ;`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -656,7 +629,6 @@ exports.getPlayerByName = (first_name, last_name) => {
 
 exports.getPlayersByCurrentEvent = (current_event) => {
     sql = `SELECT * FROM players WHERE current_event=${current_event};`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){
@@ -757,7 +729,6 @@ exports.updatePlayerByName = (first_name, last_name, country, current_event, nex
     }
     vals = vals.trim();
     let sql = `UPDATE players SET ${vals.substring(0, vals.length - 1)} WHERE first_name = '${first_name}' AND last_name = '${last_name}'`;
-    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql,  (error, result)=>{
             if(error){

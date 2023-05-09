@@ -125,10 +125,8 @@ exports.user_login = asyncHandler(async (req, res) => {
 exports.user_read_email = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {email} = req.body;
-    console.log("email", email)
     //Check for user by email
     const user = await database.getUserByEmail(email)
-    console.log("email user", user)
     if (user) {
         res.status(200)
         res.json({
@@ -186,7 +184,8 @@ exports.user_delete_post = asyncHandler(async (req, res) => {
 exports.user_forget_post = asyncHandler(async (req, res) => {
     //send reset link to user email
     const {email} = req.body;
-    const user = await User.findOne({email});
+    // const user = await User.findOne({email});
+    const user = await database.getUserByEmail(email)
     if (user) {
         //create token for link
         const userSecret = process.env.JWT_SECRET + user.password;
@@ -240,32 +239,25 @@ exports.user_read_password = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {id, password} = req.body;
     //Check for user by email
-    const user = await User.findOne({_id: id});
+    // const user = await User.findOne({_id: id});
+    const user = await database.getUserById(id);
     if (!user) {
-        res.status(401).json("Invalid id");
+        res.status(401).json({passMatch: "Invalid id"});
     }
     //validate jwt token
-    try {
-        //Validates if new password matches old password
-        //Cannot reset password with previous password
-        if (await bcrypt.compare(password, user.password)) {
-            //returns false for matching and true for not matching 
-            res.json({ 
-                passMatch: false,
-            });
-            res.status(200);
-        } else {
-            res.json({ 
-                passMatch: true,
-            });
-            res.status(200);
-        }
-    } catch (err) {
+    //Validates if new password matches old password
+    //Cannot reset password with previous password
+    if (await bcrypt.compare(password, user.password)) {
+        //returns false for matching and true for not matching 
         res.json({ 
             passMatch: false,
-            error: err
         });
-        res.status(400);
+        res.status(200);
+    } else {
+        res.json({ 
+            passMatch: true,
+        });
+        res.status(200);
     }
 });
 
@@ -276,14 +268,15 @@ exports.user_read_password_reset = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {id, password, token} = req.body;
     //Check for user by email
-    const user = await User.findOne({_id: id});
+    // const user = await User.findOne({_id: id});
+    const user = await database.getUserById(id);
     if (!user) {
         res.status(401).json("Invalid id");
     }
     //validate jwt token
     const secret = process.env.JWT_SECRET + user.password;
     try {
-        const payload = jwt.verify(token, secret);
+        const passCheck = jwt.verify(token, secret);
         //Validates if new password matches old password
         //Cannot reset password with previous password
         if (await bcrypt.compare(password, user.password)) {
@@ -314,9 +307,10 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
     //get params from body
     const {id, token, password} = req.body;
     //find user by id
-    const user = await User.findOne({_id: id});
+    // const user = await User.findOne({_id: id});
+    const user = await database.getUserById(id);
     if (!user) {
-        res.status(401).json("Invalid user");
+        res.status(401).json({updateStatus: false, error: "Invalid user"});
     }
     //validate jwt token
     const secret = process.env.JWT_SECRET + user.password;
@@ -326,9 +320,11 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassNew = await bcrypt.hash(password, salt);
         //update user password
-        const updatedUser = await User.findByIdAndUpdate(id, {password: hashedPassNew});
+        // const updatedUser = await User.findByIdAndUpdate(id, {password: hashedPassNew});
+        const updatedUser = await database.updateUser(id, null, null, null, password, null)
         res.json({ 
             updateStatus: true,
+            error: null,
         })
         res.status(200)
     } catch (err) {
@@ -338,8 +334,6 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
         })
         res.status(400)
     }
-
-
     res.send(user);
 });
 
@@ -347,138 +341,129 @@ exports.user_reset_post = asyncHandler(async (req, res) => {
 
 // @desc Update existing user
 // @route PUT /user/update/details
-// @access Private
+// @access Private (**NEED TO PROTECT)
 exports.user_update_details = asyncHandler(async (req, res) => {
-    const {id, username, email, first_name, family_name} = req.body;
+    const {id, first_name, last_name, username, password, email} = req.body;
     //check if user exists
-    const userCheck = mongoose.Types.ObjectId.isValid(id);
+    // const userCheck = mongoose.Types.ObjectId.isValid(id);
+    const userCheck = await database.getUserById(id);
     if (!userCheck) {
         res.status(401)
         throw new Error("User not found");
     }
-    //update existing user data
-    //updated data object
-    let update = {};
-    if (username) {
-        update.username = username;
-    };
-    if (email) {
-        update.email = email;
-    };
-    if (first_name) {
-        update.first_name = first_name;
-    };
-    if (family_name) {
-        update.family_name = family_name;
-    };
-
-    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
-    if (!updatedUser) {
-        res.status(401)
-        throw new Error("User not found");
-    } else {
-        res.json({
-            _id: updatedUser._id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            first_name: updatedUser.first_name,
-            family_name: updatedUser.family_name,
-            favorites: updatedUser.favorites,
-            leagues: updatedUser.leagues,
-            color: updatedUser.color,
-            profileImage: updatedUser.profileImage,
-            token: generateToken(updatedUser._id),
-        });
-        res.status(200);
-    }
-});
-
-// @desc Update existing user password
-// @route POST /user/update/password
-// @access Private
-exports.user_update_password = asyncHandler(async (req, res) => {
-    const {id, password} = req.body;
-    //check if user exists
-    const userCheck = mongoose.Types.ObjectId.isValid(id);
-    if (!userCheck) {
-        res.status(401)
-        throw new Error("User not found");
-    }
-    let update = {};
-    //if a password is passed in (null otherwise) create new hashed password
+    //hash password if being updated
+    let hashedPassword = null;
     if (password) {
-        //hash password & add to userUpdated
         const salt = await bcrypt.genSalt(10);
-        const hashedPass = await bcrypt.hash(password, salt);
-        update.password = hashedPass;
+        hashedPassword = await bcrypt.hash(password, salt);
     }
-
-    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
-    if (!updatedUser) {
-        res.status(401)
-        throw new Error("User not found");
-    } else {
+    const updatedUser = await database.updateUser(id, first_name, last_name, username, hashedPassword, email);
+    const userFound = await database.getUserById(id);
+    if (updatedUser) {
         res.json({
-            _id: updatedUser.id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            first_name: updatedUser.first_name,
-            family_name: updatedUser.family_name,
-            favorites: updatedUser.favorites,
-            leagues: updatedUser.leagues,
-            chats: [],
-            color: updatedUser.color,
-            profileImage: updatedUser.profileImage,
-            token: generateToken(updatedUser._id),
+            user: {
+                id: userFound.id,
+                username: userFound.username,
+                email: userFound.email,
+                first_name: userFound.first_name,
+                last_name: userFound.last_name,
+                token: generateToken(userFound.id),
+            },
+            status: "user updated successfully"
         });
         res.status(200);
-    }
-});
-
-
-// @desc Update existing user
-// @route PUT /user/update/preferences
-// @access Private
-exports.user_update_preferences = asyncHandler(async (req, res) => {
-    const {id, color, favorites} = req.body;
-    console.log(favorites)
-    //check if user exists
-    const userCheck = mongoose.Types.ObjectId.isValid(id);
-    if (!userCheck) {
+    } else {
+        res.json({user: null, status: "Unable to update user"})
         res.status(401)
-        throw new Error("User not found");
-    }
-
-    //update existing user data
-    let update = {};
-    if (color) {
-        update.color = color;
     };
-    if (favorites) {
-        update.favorites = favorites;
-    }
-    const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
-
-    if (!updatedUser) {
-        res.status(401)
-        throw new Error("User not found");
-    } else {
-        res.json({
-            _id: updatedUser.id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            first_name: updatedUser.first_name,
-            family_name: updatedUser.family_name,
-            favorites: updatedUser.favorites,
-            leagues: updatedUser.leagues,
-            chats: [],
-            color: updatedUser.color,
-            profileImage: updatedUser.profileImage,
-            token: generateToken(updatedUser._id),
-        });
-        res.status(200);
-    }
 });
+
+// // @desc Update existing user password
+// // @route POST /user/update/password
+// // @access Private
+// // **NOT NEEDED
+// exports.user_update_password = asyncHandler(async (req, res) => {
+//     const {id, password} = req.body;
+//     //check if user exists
+//     const userCheck = mongoose.Types.ObjectId.isValid(id);
+//     if (!userCheck) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     }
+//     let update = {};
+//     //if a password is passed in (null otherwise) create new hashed password
+//     if (password) {
+//         //hash password & add to userUpdated
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPass = await bcrypt.hash(password, salt);
+//         update.password = hashedPass;
+//     }
+
+//     const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
+//     if (!updatedUser) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     } else {
+//         res.json({
+//             _id: updatedUser.id,
+//             username: updatedUser.username,
+//             email: updatedUser.email,
+//             first_name: updatedUser.first_name,
+//             family_name: updatedUser.family_name,
+//             favorites: updatedUser.favorites,
+//             leagues: updatedUser.leagues,
+//             chats: [],
+//             color: updatedUser.color,
+//             profileImage: updatedUser.profileImage,
+//             token: generateToken(updatedUser._id),
+//         });
+//         res.status(200);
+//     }
+// });
+
+
+// // @desc Update existing user
+// // @route PUT /user/update/preferences
+// // @access Private
+// exports.user_update_preferences = asyncHandler(async (req, res) => {
+//     const {id, color, favorites} = req.body;
+//     //check if user exists
+//     const userCheck = mongoose.Types.ObjectId.isValid(id);
+//     if (!userCheck) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     }
+
+//     //update existing user data
+//     let update = {};
+//     if (color) {
+//         update.color = color;
+//     };
+//     if (favorites) {
+//         update.favorites = favorites;
+//     }
+//     const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
+
+//     if (!updatedUser) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     } else {
+//         res.json({
+//             _id: updatedUser.id,
+//             username: updatedUser.username,
+//             email: updatedUser.email,
+//             first_name: updatedUser.first_name,
+//             family_name: updatedUser.family_name,
+//             favorites: updatedUser.favorites,
+//             leagues: updatedUser.leagues,
+//             chats: [],
+//             color: updatedUser.color,
+//             profileImage: updatedUser.profileImage,
+//             token: generateToken(updatedUser._id),
+//         });
+//         res.status(200);
+//     }
+// });
 
 
 // @desc Update existing user
@@ -572,98 +557,94 @@ exports.get_image = asyncHandler(async (req, res) => {
 });
 
 
-// @desc Add a favorite to user document
-// @route POST /user/add/favorite
-// @access Private
-exports.user_add_favorite = asyncHandler(async (req, res) => {
-    const {favId, userId} = req.body;
+// // @desc Add a favorite to user document
+// // @route POST /user/add/favorite
+// // @access Private
+// exports.user_add_favorite = asyncHandler(async (req, res) => {
+//     const {favId, userId} = req.body;
 
-    //Check for user
-    let user = await User.findOne({_id: userId})
-    if (!user) {
-        res.status(401)
-        throw new Error("User not found");
-    } 
-    //Check for Player
-    let player = await Player.findOne({_id: favId});
-    if (!player) {
-        res.status(401)
-        throw new Error("Player not found");
-    }
-    let faves = user.favorites;
-    if (!faves) {
-        faves = [];
-    };
-    //Check for location already in favorites
-    if (faves.filter(item => item === favId).length >0) {
-        res.status(401)
-        throw new Error("Favorite already added");
-    }
-    //add favorite data
-    faves.push({
-        refId: favId,
-        name: location.name
-    });
-    //Updates user and returns updarted user details
-    const updatedUser = await User.findByIdAndUpdate(userId, {favorites: faves}, { new: true });
-    if (!updatedUser) {
-        res.status(401)
-        throw new Error("User not found");
-    } else {
-        res.json({
-            _id: updatedUser.id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            first_name: updatedUser.first_name,
-            family_name: updatedUser.family_name,
-            favorites: updatedUser.favorites,
-            leagues: updatedUser.leagues,
-            chats: [],
-            color: updatedUser.color,
-            profileImage: updatedUser.profileImage,
-            token: generateToken(updatedUser._id),
-        });
-        res.status(200);
-    }
-});
-
-
-// @desc Read all users for invite functionality
-// @route GET /user/read/all
-// @access Public
-exports.user_read_all = asyncHandler(async (req, res) => {
-    const usersRaw = await User.find({});
-    usersOut = []
-    usersRaw.forEach(user => {
-        console.log(user.username)
-        //return username and id
-        usersOut.push({
-            id: user._id,
-            username: user.username,
-        });
-    })
+//     //Check for user
+//     let user = await User.findOne({_id: userId})
+//     if (!user) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     } 
+//     //Check for Player
+//     let player = await Player.findOne({_id: favId});
+//     if (!player) {
+//         res.status(401)
+//         throw new Error("Player not found");
+//     }
+//     let faves = user.favorites;
+//     if (!faves) {
+//         faves = [];
+//     };
+//     //Check for location already in favorites
+//     if (faves.filter(item => item === favId).length >0) {
+//         res.status(401)
+//         throw new Error("Favorite already added");
+//     }
+//     //add favorite data
+//     faves.push({
+//         refId: favId,
+//         name: location.name
+//     });
+//     //Updates user and returns updarted user details
+//     const updatedUser = await User.findByIdAndUpdate(userId, {favorites: faves}, { new: true });
+//     if (!updatedUser) {
+//         res.status(401)
+//         throw new Error("User not found");
+//     } else {
+//         res.json({
+//             _id: updatedUser.id,
+//             username: updatedUser.username,
+//             email: updatedUser.email,
+//             first_name: updatedUser.first_name,
+//             family_name: updatedUser.family_name,
+//             favorites: updatedUser.favorites,
+//             leagues: updatedUser.leagues,
+//             chats: [],
+//             color: updatedUser.color,
+//             profileImage: updatedUser.profileImage,
+//             token: generateToken(updatedUser._id),
+//         });
+//         res.status(200);
+//     }
+// });
 
 
+// // @desc Read all users for invite functionality
+// // @route GET /user/read/all
+// // @access Public
+// exports.user_read_all = asyncHandler(async (req, res) => {
+//     const usersRaw = await User.find({});
+//     usersOut = []
+//     usersRaw.forEach(user => {
+//         //return username and id
+//         usersOut.push({
+//             id: user._id,
+//             username: user.username,
+//         });
+//     })
 
-    // //Check for user by email
-    // const user = await User.findOne({email: email})
-    // console.log("email user", user)
-    // if (user) {
-    //     res.json({
-    //         _id: user.id,
-    //         username: user.username,
-    //         email: user.email,
-    //     })
-    // } else {
-    //     res.json({
-    //         _id: "not valid user",
-    //         username: "not valid user",
-    //         email: "not valid user",
-    //     })
-    // }
+//     // //Check for user by email
+//     // const user = await User.findOne({email: email})
+//     // if (user) {
+//     //     res.json({
+//     //         _id: user.id,
+//     //         username: user.username,
+//     //         email: user.email,
+//     //     })
+//     // } else {
+//     //     res.json({
+//     //         _id: "not valid user",
+//     //         username: "not valid user",
+//     //         email: "not valid user",
+//     //     })
+//     // }
 
-    res.status(200).json(usersOut)
-});
+//     res.status(200).json(usersOut)
+// });
 
 
 

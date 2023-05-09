@@ -44,6 +44,7 @@ router.get('/', function(req, res, next) {
 });
 
 
+
 /* USER ROUTES */
 //POST request for creating a new user
 router.post("/user/create", user_controller.user_register);
@@ -55,19 +56,20 @@ router.post("/user/login", user_controller.user_login);
 router.post("/user/read/email",  user_controller.user_read_email);
 
 //POST request for reading user data by username
-router.post("/user/read/username",  user_controller.user_read_username);
+router.post("/user/read/username", user_controller.user_read_username);
 
-// POST request to delete user data
+//POST request to delete user data
+//ADD PROTECT
 router.post("/user/:id/delete", user_controller.user_delete_post);
 
-// POST request to send password reset link
+//POST request to send password reset link
 router.post("/user/forgetpass", user_controller.user_forget_post);
 
 //POST request for reading/confirming user password for reset
 router.post("/user/read/password",  user_controller.user_read_password);
 
 //POST request for reading/confirming user password for reset
-//PRIVATE
+//ADD PROTECT (may be different validation methood)
 //** Used to validate user's current password for reset */
 router.post("/user/read/reset", user_controller.user_read_password_reset);
 
@@ -75,16 +77,20 @@ router.post("/user/read/reset", user_controller.user_read_password_reset);
 router.post("/user/resetpass/", user_controller.user_reset_post);
 
 //POST request to update user data
+//ADD PROTECT
 router.put("/user/update/details", user_controller.user_update_details);
 
-//POST request to update user data
-router.put("/user/update/password", user_controller.user_update_password);
+// //POST request to update user data
+// ** NOT NEEDED
+// router.put("/user/update/password", user_controller.user_update_password);
 
 //POST request to update user data
-router.put("/user/update/preferences", user_controller.user_update_preferences);
+// ** NOT NEEDED
+// router.put("/user/update/preferences", user_controller.user_update_preferences);
 
 //POST request to update user data
-router.get("/user/read/all", user_controller.user_read_all);
+// ** NOT NEEDED
+// router.get("/user/read/all", user_controller.user_read_all);
 
 // //POST request to upload an image by user ID
 // //PRIVATE
