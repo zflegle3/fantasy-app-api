@@ -202,6 +202,8 @@ router.put("/player/update/leaderboard", player_controller.player_update_leaderb
 
 
 /* Chat ROUTES */
+//CHAT ROOM JOINING/LEAVING HANDLED IN SOCKET.IO
+//CHAT MESSAGE  SENDING/RECEIVING HANDLED IN SOCKET.IO
 // POST request for creating a new chat
 router.post("/chats/create", chat_controller.chat_create_new);
 
@@ -220,8 +222,7 @@ router.put("/chats/remove/user", chat_controller.chat_remove_user);
 // POST request for updating chat settings
 router.put("/chats/update", chat_controller.chat_update);
 
-//CHAT ROOM JOINING/LEAVING HANDLED IN SOCKET.IO
-//CHAT MESSAGE  SENDING/RECEIVING HANDLED IN SOCKET.IO
+
 
 
 
