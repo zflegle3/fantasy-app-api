@@ -548,9 +548,9 @@ exports.updateTeam = (id, name, manager, event_wins, player_wins, avatar) => {
         connection.query(sql, params, (error, result)=>{
             if(error){
                 console.log(error);
-                return resolve(null);
+                return resolve(false);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }
@@ -577,9 +577,9 @@ exports.addTeamPlayer = (team_id, player_id) => {
         connection.query(sql, params, (error, result)=>{
             if(error){
                 console.log(error)
-                return resolve(null);
+                return resolve(false);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }
@@ -591,9 +591,9 @@ exports.removeTeamPlayer = (team_id, player_id) => {
         connection.query(sql, params, (error, result)=>{
             if(error){
                 console.log(error)
-                return resolve(null);
+                return resolve(false);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }

@@ -163,19 +163,23 @@ router.put("/leagues/join", league_controller.league_join);
 
 /* TEAM ROUTES */
 // GET request for reading League data
-router.get("/team/:id", team_controller.team_read_get);
+router.get("/teams/read", team_controller.team_read_getOne);
 
-//POST request for creating a new League collection.
-router.post("/team/create", team_controller.team_create_post);
-
-//POST request to update League data.
-router.post("/team/:id/update", team_controller.team_update_post);
-
-// POST request to delete League data
-router.post("/team/:id/delete", team_controller.team_delete_post);
-
-// PUT request to delete League data
+// PUT request to update team settings
 router.put("/teams/update", team_controller.team_update);
+
+// PUT request to add players to the team
+router.put("/teams/add/player", team_controller.team_add_player);
+
+// PUT request to remove players from the team
+router.put("/teams/drop/player", team_controller.team_remove_player);
+
+// // PUT request to trade players between 2 teams 
+// router.put("/teams/trade/player", team_controller.team_trade_player);
+
+// // POST request to delete League data
+// router.delete("/team/:id/delete", team_controller.team_delete);
+
 
 
 
