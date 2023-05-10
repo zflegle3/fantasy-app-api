@@ -24,3 +24,34 @@ exports.team_delete_post = (req, res) => {
     //delete existing team data
     res.send("NOT IMPLEMENTED: Team delete POST");
 };
+
+// Handle league data update on POST.
+exports.team_update = async (req, res) => {
+    const {leagueId, managerId, nameIn} = req.body;
+    let leagueCheck = await League.findOne({_id: leagueId});
+    if (!leagueCheck) {
+        res.status(401)
+        res.send({msg: "League not found"})
+    }
+
+    let teamsTemp = [...leagueCheck.teams];
+
+    let teamsMatch = leagueCheck.teams.filter(team => team.manager.id === managerId);
+    if (teamsMatch.length != 1) {
+        res.status(403)
+        res.send({msg: "Unable to find team"})
+    }
+    let teamUpdated = teamsMatch[0];
+    let index = teamsTemp.indexOf(teamUpdated);
+    teamUpdated.name = nameIn;
+    teamsTemp[index] = teamUpdated;
+
+    let updatedLeague = await League.findByIdAndUpdate(leagueId, {teams: teamsTemp});
+    if (updatedLeague) {
+        res.send(updatedLeague);
+        res.status(200);
+    } else {
+        res.json({error: "Unable to update league"});
+        res.status(400);
+    }
+};

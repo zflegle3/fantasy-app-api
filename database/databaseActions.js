@@ -262,7 +262,7 @@ exports.userRemoveChat = (user_id, chat_id) => {
 //LEAGUE METHODS
 //CREATE NEW LEAGUE
 exports.createNewLeague = (chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) => {
-    let sql = `INSERT INTO leagues(chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+    let sql = `INSERT INTO leagues(chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?); SELECT LAST_INSERT_ID();`;
     let params = [chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id]
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
@@ -270,7 +270,8 @@ exports.createNewLeague = (chat_id, name, admin, passcode, team_qty, roster_qty,
                 console.log(error);
                 return resolve(null);
             }
-            return resolve(result[0]);
+            //returns id of created league
+            return resolve(result[1][0]['LAST_INSERT_ID()']);
         });
     });
 }
@@ -302,21 +303,13 @@ exports.getLeagueById = (id) => {
 }
 
 //UPDTE EXISTING LEAGUE
-exports.updateLeague = (id, chat_id, name, admin, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) => {
+exports.updateLeague = (id, name, passcode, team_qty, roster_qty, roster_cut, cut_score, ref_id) => {
     let params=[];
     let vals = '';
     //check variables for null and only update non-null values
-    if (chat_id) {
-        vals += `chat_id = ?, `;
-        params.push(chat_id);
-    }
     if (name) {
         vals += `name = ?, `;
         params.push(name);
-    }
-    if (admin) {
-        vals += `admin = ?, `;
-        params.push(admin);
     }
     if (passcode) {
         vals += `passcode = ?, `;
@@ -349,9 +342,9 @@ exports.updateLeague = (id, chat_id, name, admin, passcode, team_qty, roster_qty
         connection.query(sql, params, (error, result)=>{
             if(error){
                 console.log(error);
-                return resolve(null);
+                return resolve(false);
             }
-            return resolve(result[0]);
+            return resolve(true);
         });
     });
 }
@@ -463,14 +456,16 @@ exports.getActivitiesByLeagueId = (league_id) => {
 //TEAM METHODS
 //CREATE A NEW TEAM
 exports.createNewTeam = (league_id, name, manager, event_wins, player_wins, avatar) => {
-    let sql = `INSERT INTO teams(league_id, name, manager, event_wins, player_wins, avatar) VALUES ( ?, ?, ?, ?, ?, ?);`;
+    let sql = `INSERT INTO teams(league_id, name, manager, event_wins, player_wins, avatar) VALUES ( ?, ?, ?, ?, ?, ?);  SELECT LAST_INSERT_ID();`;
     let params = [league_id, name, manager, event_wins, player_wins, avatar];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
+                console.log(error);
                 return resolve(null);
             }
-            return resolve(result);
+            //returns id of created team
+            return resolve(result[1][0]['LAST_INSERT_ID()']);
         });
     });
 };
@@ -478,11 +473,13 @@ exports.createNewTeam = (league_id, name, manager, event_wins, player_wins, avat
 //DELETE AN EXSITING TEAM
 
 exports.deleteTeamById = (id) => {
+    console.log(id);
     let sql = `DELETE FROM teams WHERE id = ?;`;
     let params = [id];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
+                console.log(error);
                 return resolve(null);
             }
             return resolve(result);
@@ -514,7 +511,7 @@ exports.getTeamsByLeagueId = (league_id) => {
                 console.log(error)
                 return resolve(null);
             }
-            return resolve(result[0]);
+            return resolve(result);
         });
     });
 }

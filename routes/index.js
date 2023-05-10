@@ -132,35 +132,32 @@ router.post("/messages/create", message_controller.message_create_post);
 
 
 
-
-
 /* LEAGUE ROUTES */
 //POST request for creating a new League collection.
-router.post("/league/create",protect, league_controller.league_create_post);
+//NEED TO PROTECT
+router.post("/leagues/create", league_controller.league_create_new);
 
 //GET request for reading all leagues by user
-router.get("/league/getAll",protect, league_controller.league_read_getAll);
+//Not needed, leagues returned with user routes
+// router.get("/league/getAll",protect, league_controller.league_read_getAll);
 
 // POST request for reading League data
-router.post("/league/getOne",protect, league_controller.league_read_getOne);
+router.get("/leagues/read", league_controller.league_read_getOne);
 
 //POST request to update League data.
-router.put("/league/update/settings", league_controller.league_update_settings);
+router.put("/leagues/update/settings", league_controller.league_update_settings);
 
 // POST request to delete League data
 router.post("/league/:id/delete", league_controller.league_delete_post);
 
 // POST request to delete League data
-router.put("/league/update/passcode-in", league_controller.league_update_passcode_in);
+router.put("/leagues/update/passcode-in", league_controller.league_update_passcode_in);
 
 // POST request to delete League data
-router.put("/league/update/passcode-auto", league_controller.league_update_passcode_auto);
+router.put("/leagues/update/passcode-auto", league_controller.league_update_passcode_auto);
 
 // POST request to delete League data
-router.put("/league/update/team", league_controller.league_update_team);
-
-// POST request to delete League data
-router.put("/league/join", league_controller.league_join);
+router.put("/leagues/join", league_controller.league_join);
 
 
 
@@ -177,25 +174,28 @@ router.post("/team/:id/update", team_controller.team_update_post);
 // POST request to delete League data
 router.post("/team/:id/delete", team_controller.team_delete_post);
 
+// PUT request to delete League data
+router.put("/teams/update", team_controller.team_update);
+
 
 
 /* PLAYER ROUTES */
-// GET request for reading Messages.
+// GET request for getting all player data
 router.get("/player/all", player_controller.player_read_all);
 
-// GET request for reading Messages.
+// GET single player data
 router.get("/player/single/:id", player_controller.player_read_id);
 
-// GET request for reading Messages.
+// POST request for adding player to db by tournament
 router.post("/player/add_db", player_controller.player_add_db_all);
 
-// PUT request for reading Messages.
+// POST request for adding player to db by world ranks
 router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
 
-// PUTrequest for reading Messages.
+// POST request for adding player to db by fedex
 router.put("/player/update/fedex", player_controller.player_update_fedex_all);
 
-// PUTrequest for updating leaderboard
+// POST request for adding player to db by tournament leaderboard
 router.put("/player/update/leaderboard", player_controller.player_update_leaderboard_all);
 
 

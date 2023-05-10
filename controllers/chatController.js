@@ -45,6 +45,7 @@ exports.chat_create_new = asyncHandler(async (req, res) => {
     const userChatNew = await database.userAddChat(newChatId, userFound.id);
     //return user with updated chats 
     let userChats = await database.getUserChatsByUserId(userFound.id)
+    let userLeagues = await database.getUserLeaguesByUserId(userFound.id)
     if (newChatId) {
         res.status(200).json( {
             user: {
@@ -54,6 +55,7 @@ exports.chat_create_new = asyncHandler(async (req, res) => {
                 first_name: userFound.first_name,
                 last_name: userFound.last_name,
                 chats: userChats,
+                leagues: userLeagues,
                 token: generateToken(userFound.id),
             },
             status: "chat created"
@@ -67,6 +69,7 @@ exports.chat_create_new = asyncHandler(async (req, res) => {
                 first_name: userFound.first_name,
                 last_name: userFound.last_name,
                 chats: userChats,
+                leagues: userLeagues,
                 token: generateToken(userFound.id),
             },
             status: "Invalid data, chat not created"
