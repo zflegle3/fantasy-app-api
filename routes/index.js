@@ -52,38 +52,38 @@ router.get('/', function(req, res, next) {
 
 /* USER ROUTES */
 //POST request for creating a new user
-router.post("/user/create", user_controller.user_register);
+router.post("/users/create", user_controller.user_register);
  
 //POST request for user login
-router.post("/user/login", user_controller.user_login);
+router.post("/users/login", user_controller.user_login);
 
 //POST request for reading user data by email
-router.post("/user/read/email",  user_controller.user_read_email);
+router.post("/users/read/email",  user_controller.user_read_email);
 
 //POST request for reading user data by username
-router.post("/user/read/username", user_controller.user_read_username);
+router.post("/users/read/username", user_controller.user_read_username);
 
 //POST request to delete user data
 //ADD PROTECT
-router.post("/user/:id/delete", user_controller.user_delete_post);
+router.post("/users/:id/delete", user_controller.user_delete_post);
 
 //POST request to send password reset link
-router.post("/user/forgetpass", user_controller.user_forget_post);
+router.post("/users/forgetpass", user_controller.user_forget_post);
 
 //POST request for reading/confirming user password for reset
-router.post("/user/read/password",  user_controller.user_read_password);
+router.post("/users/read/password",  user_controller.user_read_password);
 
 //POST request for reading/confirming user password for reset
 //ADD PROTECT (may be different validation methood)
 //** Used to validate user's current password for reset */
-router.post("/user/read/reset", user_controller.user_read_password_reset);
+router.post("/users/read/reset", user_controller.user_read_password_reset);
 
 // POST request to reset password in db 
-router.post("/user/resetpass/", user_controller.user_reset_post);
+router.post("/users/resetpass/", user_controller.user_reset_post);
 
 //POST request to update user data
 //ADD PROTECT
-router.put("/user/update/details", user_controller.user_update_details);
+router.put("/users/update/details", user_controller.user_update_details);
 
 // //POST request to update user data
 // ** NOT NEEDED
@@ -195,6 +195,9 @@ router.get("/players/world/all", player_controller.player_read_world_ranks_all);
 
 // GET single player data
 router.get("/players/fedex/all", player_controller.player_read_fedex_ranks_all);
+
+// GET single player data
+router.get("/players/leaderboard/all", player_controller.player_read_leaderboard_all);
 
 // POST request for adding player to db by world ranks
 router.put("/players/update/world", player_controller.player_update_world_ranks_all);

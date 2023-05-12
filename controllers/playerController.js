@@ -47,6 +47,15 @@ exports.player_read_fedex_ranks_all = async (req, res) => {
     }
 };
 
+exports.player_read_leaderboard_all = async (req, res) => {
+    const players = await database.getPlayerAllLeaderboard();
+    if (players) {
+        return res.status(200).json({players: players, status: "players found"});
+    } else {
+        return res.status(500).json({players: null, status:"Error, could not find player data"});
+    }
+};
+
 
 exports.player_update_world_ranks_all = async (req, res) => {
     //reporting stats

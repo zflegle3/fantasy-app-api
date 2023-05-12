@@ -36,12 +36,16 @@ exports.getUsersByLeague = (league_id) =>{
 // GET USER BY EMAIL
 exports.getUserByEmail = (email) => {
     let sql = `SELECT * FROM users WHERE email= ?`;
+    console.log(sql);
     let params = [email];
+    console.log(email);
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
+                console.log(error);
                 return resolve(null);
             }
+            console.log(result);
             return resolve(result[0]);
         });
     });
@@ -785,12 +789,11 @@ exports.getPlayersAll = () => {
     }); 
 }
 
-//GET PLAYER BY ID
-exports.getPlayerAllWorldRanks = (id) => {
+//GET All WORLD RANKS
+exports.getPlayerAllWorldRanks = () => {
     let sql = `SELECT * FROM players WHERE world_rank IS NOT NULL ORDER BY world_rank;`;
-    let params = [id];
     return new Promise((resolve, reject)=>{
-        connection.query(sql, params, (error, result)=>{
+        connection.query(sql,(error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);
@@ -800,12 +803,25 @@ exports.getPlayerAllWorldRanks = (id) => {
     });
 };
 
-//GET PLAYER BY ID
-exports.getPlayerAllFedexRanks = (id) => {
+//GET ALL FEDEX RANKS
+exports.getPlayerAllFedexRanks = () => {
     let sql = `SELECT * FROM players WHERE fedex_rank IS NOT NULL ORDER BY fedex_rank;`;
-    let params = [id];
     return new Promise((resolve, reject)=>{
-        connection.query(sql, params, (error, result)=>{
+        connection.query(sql,(error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result);
+        });
+    });
+};
+
+//GET ALL LEADERBOARD STANDINGS
+exports.getPlayerAllLeaderboard = () => {
+    let sql = `SELECT * FROM players WHERE event_pos IS NOT NULL ORDER BY event_sort_total;`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, (error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);

@@ -74,14 +74,18 @@ exports.user_register = asyncHandler(async (req, res) => {
 
 
 // @desc Authenticate user login
-// @route POST /user/login
+// @route POST /users/login
 // @access Public
 exports.user_login = asyncHandler(async (req, res) => {
     //read user data from db and send
     const {emailOrUsername, password} = req.body;
+    console.log("Inputs:",emailOrUsername, password);
     //Check for user by email and username
     const userEmail = await database.getUserByEmail(emailOrUsername);
     const userUsername = await database.getUserByUsername(emailOrUsername);
+
+    console.log(userEmail, userUsername);
+    console.log("passcheck", await bcrypt.compare(password, userEmail.password));
     if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
         let userChats = await database.getUserChatsByUserId(userEmail.id)
         let userLeagues = await database.getUserLeaguesByUserId(userEmail.id)
@@ -126,6 +130,7 @@ exports.user_login = asyncHandler(async (req, res) => {
 exports.user_read_email = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {email} = req.body;
+    console.log(email);
     //Check for user by email
     const user = await database.getUserByEmail(email)
     if (user) {
@@ -136,7 +141,7 @@ exports.user_read_email = asyncHandler(async (req, res) => {
             email: user.email,
         })
     } else {
-        res.status(400)
+        res.status(200)
         res.json({
             id: "invalid user",
             username: "invalid user",
@@ -161,7 +166,7 @@ exports.user_read_username = asyncHandler(async (req, res) => {
             email: user.email,
         })
     } else {
-        res.status(400)
+        res.status(200)
         res.json({
             _id: "invalid user",
             username: "invalid user",
