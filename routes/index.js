@@ -8,6 +8,7 @@ const user_controller = require("../controllers/userController");
 const team_controller = require("../controllers/teamController");
 const player_controller = require("../controllers/playerController");
 const chat_controller = require("../controllers/chatController");
+const event_controller = require("../controllers/eventController");
 const { protect } = require("../middleware/authMiddleware")
 
 //Image Dependencies
@@ -182,66 +183,85 @@ router.put("/teams/drop/player", team_controller.team_remove_player);
 
 
 
-
 /* PLAYER ROUTES */
 // GET request for getting all player data
-router.get("/player/all", player_controller.player_read_all);
+router.get("/players/all", player_controller.player_read_all);
 
 // GET single player data
-router.get("/player/single/:id", player_controller.player_read_id);
+router.get("/players/id", player_controller.player_read_id);
 
-// POST request for adding player to db by tournament
-router.post("/player/add_db", player_controller.player_add_db_all);
+// GET single player data
+router.get("/players/world/all", player_controller.player_read_world_ranks_all);
+
+// GET single player data
+router.get("/players/fedex/all", player_controller.player_read_fedex_ranks_all);
 
 // POST request for adding player to db by world ranks
-router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
+router.put("/players/update/world", player_controller.player_update_world_ranks_all);
 
 // POST request for adding player to db by fedex
-router.put("/player/update/fedex", player_controller.player_update_fedex_all);
+router.put("/players/update/fedex", player_controller.player_update_fedex_all);
 
 // POST request for adding player to db by tournament leaderboard
-router.put("/player/update/leaderboard", player_controller.player_update_leaderboard_all);
+router.put("/players/update/leaderboard", player_controller.player_update_leaderboard_all);
+
+// // POST request for adding player to db by tournament
+// router.post("/player/add_db", player_controller.player_add_db_all);
+
+// // GET request for reading Messages.
+// router.get("/player/single/:id", player_controller.player_read_id);
+
+// // GET request for reading Messages.
+// router.post("/player/add_db", player_controller.player_add_db_all);
+
+// // PUT request for reading Messages.
+// router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
+
+// // PUTrequest for reading Messages.
+// router.put("/player/update/fedex", player_controller.player_update_fedex_all);
 
 
 
-
-/* Chat ROUTES */
+//CHAT ROUTES
 //CHAT ROOM JOINING/LEAVING HANDLED IN SOCKET.IO
 //CHAT MESSAGE  SENDING/RECEIVING HANDLED IN SOCKET.IO
 // POST request for creating a new chat
 router.post("/chats/create", chat_controller.chat_create_new);
 
-// POST request for deleting 
+// DELETE request for deleting 
 router.delete("/chats/delete", chat_controller.chat_delete);
 
-// POST request for reading chat messages.
+// GET request for reading chat messages.
 router.get("/chats/get/id", chat_controller.chat_get_id);
 
-// POST request for adding members to chats
+// PUT request for adding members to chats
 router.put("/chats/add/user", chat_controller.chat_add_user);
 
-// POST request for removing members to chats
+// PUT request for removing members to chats
 router.put("/chats/remove/user", chat_controller.chat_remove_user);
 
-// POST request for updating chat settings
+// PUT request for updating chat settings
 router.put("/chats/update", chat_controller.chat_update);
 
 
 
+/* EVENT ROUTES */
+// GET request for reading events by id
+router.get("/events/read/id", event_controller.event_read_id);
 
+// GET request for reading events by name
+router.get("/events/read/name", event_controller.event_read_name);
 
+// GET request for reading events by league id
+router.get("/events/read/league", event_controller.event_read_league);
 
-// GET request for reading Messages.
-router.get("/player/single/:id", player_controller.player_read_id);
+// GET request for reading events by id
+router.put("/events/update/all", event_controller.event_update_all);
 
-// GET request for reading Messages.
-router.post("/player/add_db", player_controller.player_add_db_all);
+// GET request for reading events by id
+//testing or dev purposes only 
+router.put("/events/update/one", event_controller.event_update_one);
 
-// PUT request for reading Messages.
-router.put("/player/update/world_ranks", player_controller.player_update_world_ranks_all);
-
-// PUTrequest for reading Messages.
-router.put("/player/update/fedex", player_controller.player_update_fedex_all);
 
 
 

@@ -600,16 +600,99 @@ exports.removeTeamPlayer = (team_id, player_id) => {
 
 //EVENT METHODS
 //CREATE NEW EVENT
-exports.createNewEvent = (name, date_start, date_end, status, location, course, network, defending) => {
-    let sql = `INSERT INTO events(name, date_start, date_end, status, location, course, network, defending) VALUES (?, TIMESTAMP(?), TIMESTAMP(?), ?, ?, ?, ?, ?);`;
-    let params = [name, date_start, date_end, status, location, course, network, defending];
+exports.createNewEvent = (name, date_start, date_end, status, location, course, network, defending, purse) => {
+    let sql = `INSERT INTO events(name, date_start, date_end, status, location, course, network, defending, purse) VALUES (?, TIMESTAMP(?), TIMESTAMP(?), ?, ?, ?, ?, ?, ?);`;
+    let params = [name, date_start, date_end, status, location, course, network, defending, purse];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
                 console.log(error);
                 return resolve(null);
             }
-            return resolve(result);
+            return resolve(true);
+        });
+    });
+};
+
+//UPDATE EXISTING TEAM
+exports.updateEvent = (id, name, date_start, date_end, status, location, course, network, defending, purse) => {
+    let params = [];
+    let vals = '';
+    //check variables for null and only update non-null values
+    if (name) {
+        vals += `name = ?, `;
+        params.push(name);
+    }
+    if (date_start) {
+        vals += `date_start = ?, `;
+        params.push(date_start);
+    }
+    if (date_end) {
+        vals += `date_end = ?, `;
+        params.push(date_end);
+    }
+    if (status) {
+        vals += `status = ?, `;
+        params.push(status);
+    }
+    if (location) {
+        vals += `location = ?, `;
+        params.push(location);
+    }
+    if (course) {
+        vals += `course = ?, `;
+        params.push(course);
+    }
+    if (network) {
+        vals += `network = ?, `;
+        params.push(network);
+    }
+    if (defending) {
+        vals += `defending = ?, `;
+        params.push(defending);
+    }
+    if (purse) {
+        vals += `purse = ?, `;
+        params.push(purse);
+    }
+    params.push(id);
+    vals = vals.trim();
+    let sql = `UPDATE events SET ${vals.substring(0, vals.length - 1)} WHERE id = ?`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(false);
+            }
+            return resolve(true);
+        });
+    });
+}
+
+exports.getEventsById = (id) => {
+    let sql = `SELECT * FROM events WHERE id= ?;`;
+    let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result[0]);
+        });
+    });
+};
+
+exports.getEventsByName = (name) => {
+    let sql = `SELECT * FROM events WHERE name= ?;`;
+    let params = [name];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result[0]);
         });
     });
 };
@@ -685,6 +768,49 @@ exports.getPlayerById = (id) => {
                 return resolve(null);
             }
             return resolve(result[0]);
+        });
+    });
+};
+
+exports.getPlayersAll = () => {
+    let sql = `SELECT * FROM players;`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql,(error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result);
+        });
+    }); 
+}
+
+//GET PLAYER BY ID
+exports.getPlayerAllWorldRanks = (id) => {
+    let sql = `SELECT * FROM players WHERE world_rank IS NOT NULL ORDER BY world_rank;`;
+    let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result);
+        });
+    });
+};
+
+//GET PLAYER BY ID
+exports.getPlayerAllFedexRanks = (id) => {
+    let sql = `SELECT * FROM players WHERE fedex_rank IS NOT NULL ORDER BY fedex_rank;`;
+    let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(result);
         });
     });
 };
@@ -846,7 +972,49 @@ exports.updatePlayerByName = (first_name, last_name, country, current_event, nex
                 console.log(error);
                 return resolve(null);
             }
-            return resolve(result[0]);
+            return resolve(true);
+        });
+    });
+}
+
+exports.updatePlayerWorldRankByName = (first_name, last_name, country, world_rank, world_total, world_avg, world_lost, world_gain, world_earn, world_events) => {
+    let params = [country, world_rank, world_total, world_avg, world_lost, world_gain, world_earn, world_events, first_name, last_name];
+    let sql = `UPDATE players SET country = ?, world_rank = ?, world_total = ?, world_avg = ?, world_lost = ?, world_gain = ?, world_earn = ?, world_events = ?  WHERE first_name = ? AND last_name = ?`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(true);
+        });
+    });
+}
+
+exports.updatePlayerFedexRankByName = (first_name, last_name, country, fedex_rank, fedex_total, fedex_wins, fedex_top10, fedex_top25, fedex_avg, fedex_strokes, fedex_rounds) => {
+    let params = [country, fedex_rank, fedex_total, fedex_wins, fedex_top10, fedex_top25, fedex_avg, fedex_strokes, fedex_rounds, first_name, last_name];
+    let sql = `UPDATE players SET country = ?, fedex_rank = ?, fedex_total = ?, fedex_wins = ?, fedex_top_10 = ?, fedex_top_25 = ?, fedex_avg = ?, fedex_strokes = ?, fedex_rounds = ?  WHERE first_name = ? AND last_name = ?`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(true);
+        });
+    });
+}
+
+exports.updatePlayerEventLeaderboard = (first_name, last_name, event_id, event_pos, event_to_par, event_thru, event_today, event_r_one, event_r_two, event_r_three, event_r_four, event_total, event_sort_total) => {
+    let params = [event_id, event_pos, event_to_par, event_thru, event_today, event_r_one, event_r_two, event_r_three, event_r_four, event_total, event_sort_total, first_name, last_name];
+    let sql = `UPDATE players SET current_event = ?, event_pos = ?, event_to_par = ?, event_thru = ?, event_today = ?, event_r_one = ?, event_r_two = ?, event_r_three = ?, event_r_four = ?, event_total = ?, event_sort_total = ?  WHERE first_name = ? AND last_name = ?`;
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error);
+                return resolve(null);
+            }
+            return resolve(true);
         });
     });
 }
