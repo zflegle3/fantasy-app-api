@@ -94,35 +94,47 @@ exports.createNewUser = (first_name, last_name, username, password, email) => {
 }
 
 //UPDTE EXISTING USER
-exports.updateUser = (id, first_name, last_name, username, password, email) => {
+exports.updateUser = (id, first_name, last_name, username, email) => {
     //function
     let vals = '';
     let params = [];
     //check variables for null and only update non-null values
     if (first_name) {
         vals += `first_name = ?, `;
-        params.push(first_name)
-    }
+        params.push(first_name);
+    };
     if (last_name) {
         vals += `last_name = ?, `;
-        params.push(last_name)
-    }
+        params.push(last_name);
+    };
     if (username) {
         vals += `username = ?, `;
-        params.push(username)
-    }
-    if (password) {
-        vals += `password = ?, `;
-        params.push(password)
-    }
+        params.push(username);
+    };
     if (email) {
         vals += `email = ?, `;
-        params.push(email)
-    }
+        params.push(email);
+    };
     params.push(id);
     vals = vals.trim();
     let sql = `UPDATE users SET ${vals.substring(0, vals.length - 1)} WHERE id = ?`;
     console.log(sql, params);
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                console.log(error)
+                return resolve(null);
+            }
+            return resolve(true);
+        });
+    });
+}
+
+//UPDTE EXISTING USER
+exports.updateUserPassword = (id, password) => {
+    let sql = `UPDATE users SET password = ? WHERE id = ?`;
+    let params = [password, id];
+    console.log(params);
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){

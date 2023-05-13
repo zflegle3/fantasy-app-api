@@ -85,9 +85,9 @@ router.post("/users/resetpass/", user_controller.user_reset_post);
 //ADD PROTECT
 router.put("/users/update/details", user_controller.user_update_details);
 
-// //POST request to update user data
-// ** NOT NEEDED
-// router.put("/user/update/password", user_controller.user_update_password);
+//POST request to update user data
+//ADD PROTECT
+router.put("/users/update/password", user_controller.user_update_password);
 
 //POST request to update user data
 // ** NOT NEEDED

@@ -33,7 +33,7 @@ const generateResetToken = (user, userSecret) => {
 // @access Public
 exports.user_register = asyncHandler(async (req, res) => {
     //create new user data
-    const {username, email, password, first_name, family_name } = req.body;
+    const {username, email, password} = req.body;
     //confirm login credentials exist
     if (!username || !email || !password) {
         res.status(400);
@@ -79,17 +79,13 @@ exports.user_register = asyncHandler(async (req, res) => {
 exports.user_login = asyncHandler(async (req, res) => {
     //read user data from db and send
     const {emailOrUsername, password} = req.body;
-    console.log("Inputs:",emailOrUsername, password);
     //Check for user by email and username
     const userEmail = await database.getUserByEmail(emailOrUsername);
     const userUsername = await database.getUserByUsername(emailOrUsername);
-
-    console.log(userEmail, userUsername);
-    console.log("passcheck", await bcrypt.compare(password, userEmail.password));
     if (userEmail && (await bcrypt.compare(password, userEmail.password))) {
         let userChats = await database.getUserChatsByUserId(userEmail.id)
         let userLeagues = await database.getUserLeaguesByUserId(userEmail.id)
-        res.json({
+        res.status(200).json({
             user: {
                 id: userEmail.id,
                 username: userEmail.username,
@@ -105,7 +101,7 @@ exports.user_login = asyncHandler(async (req, res) => {
     } else if (userUsername && (await bcrypt.compare(password, userUsername.password))) {
         let userChats = await database.getUserChatsByUserId(userUsername.id)
         let userLeagues = await database.getUserLeaguesByUserId(userUsername.id)
-        res.json({
+        res.status(200).json({
             user: {
                 id: userUsername.id,
                 username: userUsername.username,
@@ -130,7 +126,6 @@ exports.user_login = asyncHandler(async (req, res) => {
 exports.user_read_email = asyncHandler(async (req, res) => {
     //read user data from db and send public data
     const {email} = req.body;
-    console.log(email);
     //Check for user by email
     const user = await database.getUserByEmail(email)
     if (user) {
@@ -143,9 +138,9 @@ exports.user_read_email = asyncHandler(async (req, res) => {
     } else {
         res.status(200)
         res.json({
-            id: "invalid user",
-            username: "invalid user",
-            email: "invalid user",
+            id: null,
+            username: null,
+            email: null,
         })
     }
 });
@@ -161,16 +156,16 @@ exports.user_read_username = asyncHandler(async (req, res) => {
     if (user) {
         res.status(200)
         res.json({
-            _id: user.id,
+            id: user.id,
             username: user.username,
             email: user.email,
         })
     } else {
         res.status(200)
         res.json({
-            _id: "invalid user",
-            username: "invalid user",
-            email: "invalid user",
+            id: null,
+            username: null,
+            email: null,
         })
     }
 });
@@ -243,28 +238,26 @@ exports.user_forget_post = asyncHandler(async (req, res) => {
 // @access Private
 exports.user_read_password = asyncHandler(async (req, res) => {
     //read user data from db and send public data
-    const {id, password} = req.body;
+    const {id, password, password_new} = req.body;
     //Check for user by email
     // const user = await User.findOne({_id: id});
     const user = await database.getUserById(id);
     if (!user) {
         res.status(401).json({passMatch: "Invalid id"});
-    }
+    };
     //validate jwt token
     //Validates if new password matches old password
     //Cannot reset password with previous password
     if (await bcrypt.compare(password, user.password)) {
         //returns false for matching and true for not matching 
-        res.json({ 
+        res.status(200).json({ 
             passMatch: false,
         });
-        res.status(200);
     } else {
-        res.json({ 
+        res.status(200).json({ 
             passMatch: true,
         });
-        res.status(200);
-    }
+    };
 });
 
 // @desc Confirm password for reset
@@ -358,12 +351,12 @@ exports.user_update_details = asyncHandler(async (req, res) => {
         throw new Error("User not found");
     }
     //hash password if being updated
-    let hashedPassword = null;
-    if (password) {
-        const salt = await bcrypt.genSalt(10);
-        hashedPassword = await bcrypt.hash(password, salt);
-    }
-    const updatedUser = await database.updateUser(id, first_name, last_name, username, hashedPassword, email);
+    // let hashedPassword = null;
+    // if (password) {
+    //     const salt = await bcrypt.genSalt(10);
+    //     hashedPassword = await bcrypt.hash(password, salt);
+    // }
+    const updatedUser = await database.updateUser(id, first_name, last_name, username, email);
     const userFound = await database.getUserById(id);
     let userChats = await database.getUserChatsByUserId(userFound.id)
     let userLeagues = await database.getUserLeaguesByUserId(userFound.id)
@@ -388,49 +381,50 @@ exports.user_update_details = asyncHandler(async (req, res) => {
     };
 });
 
-// // @desc Update existing user password
-// // @route POST /user/update/password
-// // @access Private
-// // **NOT NEEDED
-// exports.user_update_password = asyncHandler(async (req, res) => {
-//     const {id, password} = req.body;
-//     //check if user exists
-//     const userCheck = mongoose.Types.ObjectId.isValid(id);
-//     if (!userCheck) {
-//         res.status(401)
-//         throw new Error("User not found");
-//     }
-//     let update = {};
-//     //if a password is passed in (null otherwise) create new hashed password
-//     if (password) {
-//         //hash password & add to userUpdated
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPass = await bcrypt.hash(password, salt);
-//         update.password = hashedPass;
-//     }
-
-//     const updatedUser = await User.findByIdAndUpdate(id, update, {new: true});
-//     if (!updatedUser) {
-//         res.status(401)
-//         throw new Error("User not found");
-//     } else {
-//         res.json({
-//             _id: updatedUser.id,
-//             username: updatedUser.username,
-//             email: updatedUser.email,
-//             first_name: updatedUser.first_name,
-//             family_name: updatedUser.family_name,
-//             favorites: updatedUser.favorites,
-//             leagues: updatedUser.leagues,
-//             chats: [],
-//             color: updatedUser.color,
-//             profileImage: updatedUser.profileImage,
-//             token: generateToken(updatedUser._id),
-//         });
-//         res.status(200);
-//     }
-// });
-
+// @desc Update existing user password
+// @route PUT /user/update/password
+// @access Private (**NEED TO PROTECT)
+exports.user_update_password = asyncHandler(async (req, res) => {
+    const {id, password, password_new} = req.body;
+    //check if user exists
+    // const userCheck = mongoose.Types.ObjectId.isValid(id);
+    const userCheck = await database.getUserById(id);
+    if (!userCheck) {
+        res.status(401)
+        throw new Error("User not found");
+    }
+    //validate current password 
+    if (await bcrypt.compare(password, userCheck.password)) {
+        //update password
+        // hash password if being updated
+        const salt = await bcrypt.genSalt(10);
+        let hashedPassword = await bcrypt.hash(password_new, salt);
+        let userUpdated = database.updateUserPassword(id, hashedPassword);
+        const userFound = await database.getUserById(id);
+        let userChats = await database.getUserChatsByUserId(userFound.id)
+        let userLeagues = await database.getUserLeaguesByUserId(userFound.id)
+        if (userUpdated) {
+            res.status(200).json({
+                user: {
+                    id: userFound.id,
+                    username: userFound.username,
+                    email: userFound.email,
+                    first_name: userFound.first_name,
+                    last_name: userFound.last_name,
+                    chats: userChats,
+                    leagues: userLeagues,
+                    token: generateToken(userFound.id),
+                },
+                status: "user updated successfully"
+            });
+        } else {
+            res.status(401).json({user: null, status: "Unable to update user"})
+        };
+    } else {
+        //handle error
+        res.status(401).json({user: null, status: "Unable to update user"})
+    };
+});
 
 // // @desc Update existing user
 // // @route PUT /user/update/preferences
