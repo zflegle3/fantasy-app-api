@@ -234,7 +234,7 @@ exports.player_update_leaderboard_all = async (req, res) => {
     //     "total": "-"
     // },
     //Get event data related to current tournament 
-    res.status(200).json(result.players);
+    // res.status(200).json(result.players);
     let eventCurrent = await database.getEventsByName(result.event)
 
     if (eventCurrent) {

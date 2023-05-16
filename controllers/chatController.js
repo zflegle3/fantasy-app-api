@@ -128,6 +128,7 @@ exports.chat_get_id = asyncHandler(async (req, res) => {
     let chat = await database.getChat(id);
     let members = await database.getChatUsers(id);
     let messages = await database.getMessagesByChatId(id);
+    console.log(chat);
     if (chat) {
         res.status(200).json({
             chat: {

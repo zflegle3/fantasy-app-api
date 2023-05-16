@@ -143,7 +143,7 @@ router.post("/leagues/create", league_controller.league_create_new);
 // router.get("/league/getAll",protect, league_controller.league_read_getAll);
 
 // POST request for reading League data
-router.get("/leagues/read", league_controller.league_read_getOne);
+router.post("/leagues/read", league_controller.league_read_getOne);
 
 //POST request to update League data.
 router.put("/leagues/update/settings", league_controller.league_update_settings);
@@ -235,7 +235,7 @@ router.post("/chats/create", chat_controller.chat_create_new);
 router.delete("/chats/delete", chat_controller.chat_delete);
 
 // GET request for reading chat messages.
-router.get("/chats/get/id", chat_controller.chat_get_id);
+router.post("/chats/get/id", chat_controller.chat_get_id);
 
 // PUT request for adding members to chats
 router.put("/chats/add/user", chat_controller.chat_add_user);

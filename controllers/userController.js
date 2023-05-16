@@ -79,6 +79,7 @@ exports.user_register = asyncHandler(async (req, res) => {
 exports.user_login = asyncHandler(async (req, res) => {
     //read user data from db and send
     const {emailOrUsername, password} = req.body;
+    console.log("inputs",emailOrUsername, password);
     //Check for user by email and username
     const userEmail = await database.getUserByEmail(emailOrUsername);
     const userUsername = await database.getUserByUsername(emailOrUsername);

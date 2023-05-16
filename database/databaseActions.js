@@ -79,6 +79,26 @@ exports.getUserById = (id) => {
     });
 }
 
+// GET USER BY ID
+exports.getUserByIdDisplay = (id) => {
+    let sql = `SELECT * FROM users WHERE id= ?`;
+    let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result) => {
+            if(error){
+                return resolve(null);
+            };
+            return resolve({
+                id: result[0].id,
+                username: result[0].username,
+                email: result[0].email,
+                first_name: result[0].first_name,
+                last_name: result[0].last_name,
+            });
+        });
+    });
+}
+
 //CREATE NEW USER
 exports.createNewUser = (first_name, last_name, username, password, email) => {
     let sql = `INSERT INTO users(first_name, last_name, username, password, email) VALUES (?, ?, ?, ?, ?);`;
@@ -194,6 +214,7 @@ exports.updateChat = (id, name) => {
 exports.getChat = (id) => {
     let sql = `SELECT * FROM chats WHERE id= ?;`;
     let params = [id];
+    console.log(id);
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
@@ -308,6 +329,20 @@ exports.getLeagueByRef = (ref_id) => {
 exports.getLeagueById = (id) => {
     let sql = `SELECT * FROM leagues WHERE id= ?;`;
     let params = [id];
+    return new Promise((resolve, reject)=>{
+        connection.query(sql, params, (error, result)=>{
+            if(error){
+                return resolve(null);
+            }
+            console.log
+            return resolve(result[0]);
+        });
+    });
+}
+
+exports.getLeagueByNameAndPasscode = (name, passcode) => {
+    let sql = `SELECT * FROM leagues WHERE name = ? AND passcode = ?;`;
+    let params = [name, passcode];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
@@ -519,7 +554,7 @@ exports.getTeamById = (id) => {
 };
 
 exports.getTeamsByLeagueId = (league_id) => {
-    let sql = `SELECT * FROM teams WHERE league_id= ?;`;
+    let sql = `SELECT  teams.id, teams.league_id, teams.name, teams.manager, users.username, teams.event_wins, teams.player_wins, teams.avatar FROM users INNER JOIN teams ON users.id = teams.manager WHERE teams.league_id = ?;`;
     let params = [league_id];
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{

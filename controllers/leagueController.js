@@ -106,7 +106,58 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
     //read league data from db and send 
     const {id} = req.body;
     const leagueFound = await database.getLeagueById(id);
+    const leagueTeams = await database.getTeamsByLeagueId(id);
+    //add placeholder teams if not all populated
+    if (leagueTeams.length < leagueFound.team_qty) {
+        for (let i=0; i < leagueFound.team_qty; i++) {
+            if (i >= leagueTeams.length) {
+                leagueTeams.push({
+                    id: i+1,
+                    league_id: leagueFound.id, 
+                    name: `Team ${i+1}`,
+                    manager: null, 
+                    username: "Invite Manager",
+                    event_wins: 0,
+                    player_wins: 0,
+                    players: [],
+                    avatar: null,
+                })
+            } 
+        }
+    }
+    //add players
+    for (let i =0; i < leagueTeams.length; i++) {
+        let teamRoster = [];
+        if (leagueTeams[i].manager) {
+            let teamPlayers = await database.getPlayersByTeam(leagueTeams[i].id);
+            teamRoster = teamPlayers;  
+        };
+        for (let i=0; i < leagueFound.roster_qty; i++) {
+            if (i >= teamRoster.length) {
+                teamRoster.push({
+                    id: i+1,
+                    first_name: `Player`,
+                    last_name: `Player ${i+1}`,
+                    username: "Invite Manager",
+                    event_wins: 0,
+                    player_wins: 0,
+                    avatar: null,
+                });
+            };
+        };
+        // leagueTeams[i].players = teamRoster;
+        leagueTeams[i].players = teamRoster;
+    };
+
+
+    const leagueActivity = await database.getActivitiesByLeagueId(id);
     if (leagueFound) {
+        if (leagueTeams) {
+            leagueFound.teams = leagueTeams;
+            leagueFound.activity = leagueActivity;
+        } else {
+            []
+        };
         return res.status(200).json({league: leagueFound, status: "league found"})
     } else {
         return res.status(400).json({league: null, status: "unable to find league"})
@@ -149,7 +200,11 @@ exports.league_update_settings = async (req, res) => {
         };
     }
     let leagueFound = await database.getLeagueById(id);
+    const leagueTeams = await database.getTeamsByLeagueId(id);
+    const leagueActivity = await database.getActivitiesByLeagueId(id);
     if (leagueUpdate) {
+        leagueFound.teams = leagueTeams;
+        leagueFound.activity = leagueActivity;
         return res.status(200).json({league: leagueFound, status: "league updated successfully"});
     } else {
         return res.status(400).json({league: null, status: "unable to update league"});
@@ -173,7 +228,11 @@ exports.league_update_passcode_in = async (req, res) => {
     }
     let leagueUpdate = await database.updateLeague(id, null, passcode, null, null, null, null, null);
     let leagueFound = await database.getLeagueById(id);
+    const leagueTeams = await database.getTeamsByLeagueId(id);
+    const leagueActivity = await database.getActivitiesByLeagueId(id);
     if (leagueUpdate) {
+        leagueFound.teams = leagueTeams;
+        leagueFound.activity = leagueActivity;
         return res.status(200).json({league: leagueFound, status: "league updated successfully"});
     } else {
         return res.status(400).json({league: null, status: "unable to update league"});
@@ -195,7 +254,11 @@ exports.league_update_passcode_auto = async (req, res) => {
     }
     let leagueUpdate = await database.updateLeague(id, null, newCode, null, null, null, null, null);
     let leagueFound = await database.getLeagueById(id);
+    const leagueTeams = await database.getTeamsByLeagueId(id);
+    const leagueActivity = await database.getActivitiesByLeagueId(id);
     if (leagueUpdate) {
+        leagueFound.teams = leagueTeams;
+        leagueFound.activity = leagueActivity;
         return res.status(200).json({league: leagueFound, status: "league updated successfully"});
     } else {
         return res.status(400).json({league: null, status: "unable to update league"});
@@ -204,21 +267,20 @@ exports.league_update_passcode_auto = async (req, res) => {
 
 // Handle league data update on PUT.
 exports.league_join = asyncHandler(async (req, res) => {
-    const {league_id, user_id} = req.body;
+    const {league_name, user_id, passcode} = req.body;
     //find league by id
-    let leagueCheck = await database.getLeagueById(league_id)
+    let leagueCheck = await database.getLeagueByNameAndPasscode(league_name, passcode);
     if (!leagueCheck) {
-        return res.status(401).json({user: null, status: "league not found"})
-    }
+        return res.status(401).json({user: null, status: "league not found, check league credentials"})
+    };
     // Find user by id 
     let userCheck = await database.getUserById(user_id);
     if (!userCheck) {
         return res.status(401).json({user: null, status: "user not found"})
     }
 	// Find teams by league
-    let leagueTeams = await database.getTeamsByLeagueId(league_id);
+    let leagueTeams = await database.getTeamsByLeagueId(leagueCheck.id);
     let userJoined = [...leagueTeams].filter(team => team.manager == user_id);
-    console.log(userJoined.length);
     if (userJoined.length > 0) {
         return res.status(401).json({user: null, status: "user already joined league"})
     }
@@ -228,15 +290,17 @@ exports.league_join = asyncHandler(async (req, res) => {
         // Update Team by id
         let updatedTeam = database.updateTeam(teamsAvailable[0].id, null, user_id, null, null, null);
         // Add relationship user leagues
-        let updatedUserLeague = database.userAddLeague(league_id, user_id);
+        let updatedUserLeague = database.userAddLeague(leagueCheck.id, user_id);
     } else {
         return res.status(401).json({user: null, status: "league full, unable to join"})
     }
+    //Create League activity
+    let leagueActivity = await database.createNewActivity(leagueCheck.id, user_id, `${userCheck.username} joined ${leagueCheck.name}.`);
     //return user with updated leagues value
     const userFound = await database.getUserById(user_id);
     let userChats = await database.getUserChatsByUserId(user_id)
     let userLeagues = await database.getUserLeaguesByUserId(user_id)
-    let joinedSuccessfully = [...userLeagues.filter(league => league.league_id == league_id)]
+    let joinedSuccessfully = [...userLeagues.filter(league => league.league_id == leagueCheck.id)]
     if (joinedSuccessfully.length > 0) {
         return res.status(200).json({
             user: {
