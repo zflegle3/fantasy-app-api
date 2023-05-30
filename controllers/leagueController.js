@@ -106,54 +106,12 @@ exports.league_read_getOne = asyncHandler(async(req, res) => {
     //read league data from db and send 
     const {id} = req.body;
     const leagueFound = await database.getLeagueById(id);
-    const leagueTeams = await database.getTeamsByLeagueId(id);
-    //add placeholder teams if not all populated
-    if (leagueTeams.length < leagueFound.team_qty) {
-        for (let i=0; i < leagueFound.team_qty; i++) {
-            if (i >= leagueTeams.length) {
-                leagueTeams.push({
-                    id: i+1,
-                    league_id: leagueFound.id, 
-                    name: `Team ${i+1}`,
-                    manager: null, 
-                    username: "Invite Manager",
-                    event_wins: 0,
-                    player_wins: 0,
-                    players: [],
-                    avatar: null,
-                })
-            } 
-        }
-    }
-    //add players
-    for (let i =0; i < leagueTeams.length; i++) {
-        let teamRoster = [];
-        if (leagueTeams[i].manager) {
-            let teamPlayers = await database.getPlayersByTeam(leagueTeams[i].id);
-            teamRoster = teamPlayers;  
-        };
-        for (let i=0; i < leagueFound.roster_qty; i++) {
-            if (i >= teamRoster.length) {
-                teamRoster.push({
-                    id: i+1,
-                    first_name: `Player`,
-                    last_name: `Player ${i+1}`,
-                    username: "Invite Manager",
-                    event_wins: 0,
-                    player_wins: 0,
-                    avatar: null,
-                });
-            };
-        };
-        // leagueTeams[i].players = teamRoster;
-        leagueTeams[i].players = teamRoster;
-    };
-
-
+    const leagueTeams = await database.getTeamsByLeagueId(id, leagueFound.team_qty);
+    const leagueTeamsWPlayers = await database.populateTeamPlayers(leagueTeams, leagueFound.roster_qty);
     const leagueActivity = await database.getActivitiesByLeagueId(id);
     if (leagueFound) {
         if (leagueTeams) {
-            leagueFound.teams = leagueTeams;
+            leagueFound.teams = leagueTeamsWPlayers;
             leagueFound.activity = leagueActivity;
         } else {
             []

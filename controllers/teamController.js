@@ -33,6 +33,7 @@ exports.team_read_getOne = asyncHandler(async(req, res) => {
 // @access Private
 exports.team_update = asyncHandler(async(req, res) => {
     const {user_id, id, name, manager, event_wins, player_wins, avatar} = req.body;
+    console.log(user_id, id, name, manager, event_wins, player_wins, avatar);
     //check team exists
     let teamCheck = await database.getTeamById(id);
     if (!teamCheck) {
@@ -44,21 +45,38 @@ exports.team_update = asyncHandler(async(req, res) => {
     };
     //update team
     let updatedTeam = await database.updateTeam(id, name, manager, event_wins, player_wins, avatar);
-    //return updated team
-    if (updatedTeam) {
-        let teamFound = await database.getTeamById(id);
-        let teamPlayers = await  database.getPlayersByTeam(id);
-        teamFound.players = teamPlayers;
-        return res.status(200).json({
-            team: teamFound,
-            status: "team updated successfully"
-        });
+    //return league data with updated team
+    const leagueFound = await database.getLeagueById(teamCheck.league_id);
+    const leagueTeams = await database.getTeamsByLeagueId(teamCheck.league_id, leagueFound.team_qty);
+    const leagueTeamsWPlayers = await database.populateTeamPlayers(leagueTeams, leagueFound.roster_qty);
+    const leagueActivity = await database.getActivitiesByLeagueId(teamCheck.league_id);
+    if (leagueFound) {
+        if (leagueTeams) {
+            leagueFound.teams = leagueTeamsWPlayers;
+            leagueFound.activity = leagueActivity;
+        } else {
+            []
+        };
+        return res.status(200).json({league: leagueFound, status: "league found"})
     } else {
-        return res.status(400).json({
-            team: null,
-            status: "Error: unable to update team"
-        });
+        return res.status(400).json({league: null, status: "unable to find league"})
     }
+
+    //previously returned updated team 
+    // if (updatedTeam) {
+    //     let teamFound = await database.getTeamById(id);
+    //     let teamPlayers = await  database.getPlayersByTeam(id);
+    //     teamFound.players = teamPlayers;
+    //     return res.status(200).json({
+    //         team: teamFound,
+    //         status: "team updated successfully"
+    //     });
+    // } else {
+    //     return res.status(400).json({
+    //         team: null,
+    //         status: "Error: unable to update team"
+    //     });
+    // }
 });
 
 // @desc Add player to team

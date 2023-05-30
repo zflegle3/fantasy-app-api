@@ -553,7 +553,7 @@ exports.getTeamById = (id) => {
     });
 };
 
-exports.getTeamsByLeagueId = (league_id) => {
+exports.getTeamsByLeagueId = async (league_id, teamQty) => {
     let sql = `SELECT  teams.id, teams.league_id, teams.name, teams.manager, users.username, teams.event_wins, teams.player_wins, teams.avatar FROM users INNER JOIN teams ON users.id = teams.manager WHERE teams.league_id = ?;`;
     let params = [league_id];
     return new Promise((resolve, reject)=>{
@@ -562,9 +562,55 @@ exports.getTeamsByLeagueId = (league_id) => {
                 console.log(error)
                 return resolve(null);
             }
+            //add placeholder teams if not all populated
+            if (result.length < teamQty) {
+                for (let i=0; i < teamQty; i++) {
+                    if (i >= result.length) {
+                        result.push({
+                            id: i+1,
+                            league_id: league_id, 
+                            name: `Team ${i+1}`,
+                            manager: null, 
+                            username: "Invite Manager",
+                            event_wins: 0,
+                            player_wins: 0,
+                            players: [],
+                            avatar: null,
+                        })
+                    };
+                };
+            };
             return resolve(result);
         });
     });
+}
+
+exports.populateTeamPlayers = async(teamsArray, playerQty) => {
+    //Populate players to teams
+    for (let i =0; i < teamsArray.length; i++) {
+        let teamRoster = [];
+        if (teamsArray[i].manager) {
+            //assumes populated teams will have a manager
+            let teamPlayers = await this.getPlayersByTeam(teamsArray[i].id);
+            teamRoster = teamPlayers;  
+        };
+        for (let i=0; i < playerQty; i++) {
+            if (i >= teamRoster.length) {
+                teamRoster.push({
+                    id: i+1,
+                    first_name: `Player`,
+                    last_name: `Player ${i+1}`,
+                    username: "Invite Manager",
+                    event_wins: 0,
+                    player_wins: 0,
+                    avatar: null,
+                });
+            };
+        };
+        teamsArray[i].players = teamRoster;
+    };
+    //returns original team array with players added
+    return(teamsArray);
 }
 
 //UPDATE EXISTING TEAM
@@ -595,6 +641,7 @@ exports.updateTeam = (id, name, manager, event_wins, player_wins, avatar) => {
     params.push(id);
     vals = vals.trim();
     let sql = `UPDATE teams SET ${vals.substring(0, vals.length - 1)} WHERE id = ?`;
+    console.log(sql);
     return new Promise((resolve, reject)=>{
         connection.query(sql, params, (error, result)=>{
             if(error){
